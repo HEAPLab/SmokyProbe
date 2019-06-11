@@ -21,7 +21,31 @@
 #include "ina233_hal.h"
 
 
-HAL_StatusTypeDef INA233_StatusCheck(I2C_HandleTypeDef * i2c_handle, uint16_t slave_addr)
+HAL_StatusTypeDef INA233_GetManufactureInfo(
+		I2C_HandleTypeDef * i2c_handle,
+		uint16_t slave_addr,
+		INA233_ManufactureInfo * info) {
+
+	HAL_StatusTypeDef status = HAL_OK;
+
+	uint8_t cmd  = INA233_MFR_ID;
+	status = HAL_I2C_Master_Transmit(i2c_handle, slave_addr, &cmd, 1, INA233_I2C_BUS_TIMEOUT);
+	status = HAL_I2C_Master_Receive(i2c_handle, slave_addr, &info->man_id, 2, INA233_I2C_BUS_TIMEOUT);
+	if (status != HAL_OK) return status;
+
+	cmd = INA233_MFR_MODEL;
+	status = HAL_I2C_Master_Transmit(i2c_handle, slave_addr, &cmd, 1, INA233_I2C_BUS_TIMEOUT);
+	status = HAL_I2C_Master_Receive(i2c_handle, slave_addr, &info->dev_model, 6, INA233_I2C_BUS_TIMEOUT);
+	if (status != HAL_OK) return status;
+
+	cmd = INA233_MFR_REVISION;
+	status = HAL_I2C_Master_Transmit(i2c_handle, slave_addr, &cmd, 1, INA233_I2C_BUS_TIMEOUT);
+	status = HAL_I2C_Master_Receive(i2c_handle, slave_addr, &info->rev, 2, INA233_I2C_BUS_TIMEOUT);
+
+	return status;
+}
+
+
 HAL_StatusTypeDef INA233_StatusCheck(
 		I2C_HandleTypeDef * i2c_handle, uint16_t slave_addr)
 {

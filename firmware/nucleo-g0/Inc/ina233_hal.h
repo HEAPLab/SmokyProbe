@@ -18,7 +18,6 @@
   */
 /* USER CODE END Header */
 
-/* Define to prevent recursive inclusion -------------------------------------*/
 #ifndef __TI_INA233_HAL_H
 #define __TI_INA233_HAL_H
 
@@ -46,10 +45,25 @@
 #define INA233_I2C_BUS_TIMEOUT  10
 
 
+#define INA233_MFR_ID        0x99
+#define INA233_MFR_MODEL     0x9A
+#define INA233_MFR_REVISION  0x9B
 
 #define INA233_VIN_CODE      0x88
 #define INA233_STATUS_WORD   0x79
 #define COEFFICIENT          (0.01 / 8)
+
+/**
+ * @brief Device manufacturing information
+ */
+typedef struct {
+	uint8_t man_id[2];      /*!< Manufacturer ID (in ASCII) */
+	uint8_t dev_model[6];   /*!< Device number (in ASCII) */
+	uint8_t rev[2];         /*!< Device revision letter and number */
+} INA233_ManufactureInfo;
+
+
+HAL_StatusTypeDef INA233_GetManufactureInfo(I2C_HandleTypeDef *, uint16_t, INA233_ManufactureInfo *);
 HAL_StatusTypeDef INA233_StatusCheck(I2C_HandleTypeDef *, uint16_t);
 
 
