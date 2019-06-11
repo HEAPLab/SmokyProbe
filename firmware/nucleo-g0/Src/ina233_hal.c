@@ -22,14 +22,15 @@
 
 
 HAL_StatusTypeDef INA233_StatusCheck(I2C_HandleTypeDef * i2c_handle, uint16_t slave_addr)
+HAL_StatusTypeDef INA233_StatusCheck(
+		I2C_HandleTypeDef * i2c_handle, uint16_t slave_addr)
 {
 	HAL_StatusTypeDef status = HAL_OK;
-	uint8_t code = INA233_STATUS_WORD_CODE;
-	uint8_t recv_data[2];
-	uint32_t timeout = 10;
+	uint8_t cmd = INA233_STATUS_WORD;
+	uint16_t recv_data;  // default value = 1000h = 4096d
 
-	status = HAL_I2C_Master_Transmit(i2c_handle, slave_addr, &code, sizeof(uint8_t), timeout);
-	status = HAL_I2C_Master_Receive(i2c_handle, slave_addr, recv_data, 2*sizeof(uint8_t), timeout);
+	status = HAL_I2C_Master_Transmit(i2c_handle, slave_addr, &cmd, 1, INA233_I2C_BUS_TIMEOUT);
+	status = HAL_I2C_Master_Receive(i2c_handle, slave_addr, &recv_data, 2, INA233_I2C_BUS_TIMEOUT);
 	if (status == HAL_ERROR) {
 		  asm("nop");
 	}

@@ -30,6 +30,12 @@
 
 #define toVoltage(x) (x*(0.01/8))
 
+#define USER_SHUNT_RESISTOR_VALUE   0.002
+#define USER_MAX_EXPECTED_CURRENT   10.0
+
+#define INA233_CURRENT_LSB  (USER_MAX_EXPECTED_CURRENT / 2^15)
+#define INA233_CAL          (0.00512 / (INA233_CURRENT_LSB * USER_SHUNT_RESISTOR_VALUE)) // = 8258
+
 
 // HAL API will take care of adding the R/W bit
 #define INA233_SLAVE_1 (0b1000000 << 1)
@@ -37,11 +43,13 @@
 #define INA233_SLAVE_3 (0b1001000 << 1)
 #define INA233_SLAVE_4 (0b1001100 << 1)
 
-#define INA233_VIN_CODE          0x88
-#define INA233_STATUS_WORD_CODE  0x79
-#define COEFFICIENT              (0.01 / 8)
+#define INA233_I2C_BUS_TIMEOUT  10
 
 
+
+#define INA233_VIN_CODE      0x88
+#define INA233_STATUS_WORD   0x79
+#define COEFFICIENT          (0.01 / 8)
 HAL_StatusTypeDef INA233_StatusCheck(I2C_HandleTypeDef *, uint16_t);
 
 
