@@ -21,6 +21,8 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 
+#include "ina233_hal.h"
+
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
@@ -38,7 +40,7 @@
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
-#define toVoltage(x) (x*(0.01/8))
+
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
@@ -50,16 +52,6 @@ UART_HandleTypeDef hlpuart1;
 
 // Defined as global to help debugging with Eclipse
 HAL_StatusTypeDef status = HAL_OK;
-
-// HAL API will take care of adding the R/W bit
-uint16_t DEVICE_SLAVE_1 = 0b1000000 << 1;
-uint16_t DEVICE_SLAVE_2 = 0b1000100 << 1;
-uint16_t DEVICE_SLAVE_3 = 0b1001000 << 1;
-uint16_t DEVICE_SLAVE_4 = 0b1001100 << 1;
-uint8_t VIN_CODE = 0x88;
-uint8_t STATUS_WORD_CODE = 0x79;
-
-uint8_t COEFFICIENT = 0.01 / 8;
 
 /* USER CODE END PV */
 
@@ -116,17 +108,14 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  uint8_t to_be_received[2];
-	  status = HAL_I2C_Master_Transmit(&hi2c1, DEVICE_SLAVE_2, &STATUS_WORD_CODE, sizeof(uint8_t), 10);
-	  status = HAL_I2C_Master_Receive(&hi2c1, DEVICE_SLAVE_2, to_be_received, 2*sizeof(uint8_t), 10);
-	  if (status == HAL_ERROR) {
-		  asm("nop");
-	  }
-    /* USER CODE END WHILE */
+    status = INA233_StatusCheck(&hi2c1, INA233_SLAVE_1);
+    status = INA233_StatusCheck(&hi2c1, INA233_SLAVE_2);
+    status = INA233_StatusCheck(&hi2c1, INA233_SLAVE_3);
+    status = INA233_StatusCheck(&hi2c1, INA233_SLAVE_4);
 
-    /* USER CODE BEGIN 3 */
+  /* USER CODE END WHILE */
   }
-  /* USER CODE END 3 */
+
 }
 
 /**
