@@ -18,7 +18,7 @@
   */
 /* USER CODE END Header */
 
-#include "ina233_hal.h"
+#include "ina233_hal_if.h"
 
 
 HAL_StatusTypeDef INA233_GetManufactureInfo(
@@ -29,18 +29,18 @@ HAL_StatusTypeDef INA233_GetManufactureInfo(
 	HAL_StatusTypeDef status = HAL_OK;
 
 	uint8_t cmd  = INA233_MFR_ID;
-	status = HAL_I2C_Master_Transmit(i2c_handle, slave_addr, &cmd, 1, INA233_I2C_BUS_TIMEOUT);
-	status = HAL_I2C_Master_Receive(i2c_handle, slave_addr, &info->man_id, 2, INA233_I2C_BUS_TIMEOUT);
+	status = HAL_I2C_Master_Transmit(i2c_handle, slave_addr, &cmd, 1, CONF_I2C_BUS_TIMEOUT);
+	status = HAL_I2C_Master_Receive(i2c_handle, slave_addr, &info->man_id, 2, CONF_I2C_BUS_TIMEOUT);
 	if (status != HAL_OK) return status;
 
 	cmd = INA233_MFR_MODEL;
-	status = HAL_I2C_Master_Transmit(i2c_handle, slave_addr, &cmd, 1, INA233_I2C_BUS_TIMEOUT);
-	status = HAL_I2C_Master_Receive(i2c_handle, slave_addr, &info->dev_model, 6, INA233_I2C_BUS_TIMEOUT);
+	status = HAL_I2C_Master_Transmit(i2c_handle, slave_addr, &cmd, 1, CONF_I2C_BUS_TIMEOUT);
+	status = HAL_I2C_Master_Receive(i2c_handle, slave_addr, &info->dev_model, 6, CONF_I2C_BUS_TIMEOUT);
 	if (status != HAL_OK) return status;
 
 	cmd = INA233_MFR_REVISION;
-	status = HAL_I2C_Master_Transmit(i2c_handle, slave_addr, &cmd, 1, INA233_I2C_BUS_TIMEOUT);
-	status = HAL_I2C_Master_Receive(i2c_handle, slave_addr, &info->rev, 2, INA233_I2C_BUS_TIMEOUT);
+	status = HAL_I2C_Master_Transmit(i2c_handle, slave_addr, &cmd, 1, CONF_I2C_BUS_TIMEOUT);
+	status = HAL_I2C_Master_Receive(i2c_handle, slave_addr, &info->rev, 2, CONF_I2C_BUS_TIMEOUT);
 
 	return status;
 }
@@ -53,8 +53,8 @@ HAL_StatusTypeDef INA233_StatusCheck(
 	uint8_t cmd = INA233_STATUS_WORD;
 	uint16_t recv_data;  // default value = 1000h = 4096d
 
-	status = HAL_I2C_Master_Transmit(i2c_handle, slave_addr, &cmd, 1, INA233_I2C_BUS_TIMEOUT);
-	status = HAL_I2C_Master_Receive(i2c_handle, slave_addr, &recv_data, 2, INA233_I2C_BUS_TIMEOUT);
+	status = HAL_I2C_Master_Transmit(i2c_handle, slave_addr, &cmd, 1, CONF_I2C_BUS_TIMEOUT);
+	status = HAL_I2C_Master_Receive(i2c_handle, slave_addr, &recv_data, 2, CONF_I2C_BUS_TIMEOUT);
 	if (status == HAL_ERROR) {
 		  asm("nop");
 	}
