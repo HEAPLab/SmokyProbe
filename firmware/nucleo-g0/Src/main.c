@@ -21,7 +21,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 
-#include "ina233_hal.h"
+#include "ina233_hal_if.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -101,17 +101,18 @@ int main(void)
   MX_LPUART1_UART_Init();
   MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
+  INA233_Init(&hi2c1, INA233_SLAVE_1);
+  INA233_Init(&hi2c1, INA233_SLAVE_2);
+  INA233_Init(&hi2c1, INA233_SLAVE_3);
+  INA233_Init(&hi2c1, INA233_SLAVE_4);
 
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+
   while (1)
   {
-    status = INA233_StatusCheck(&hi2c1, INA233_SLAVE_1);
-    status = INA233_StatusCheck(&hi2c1, INA233_SLAVE_2);
-    status = INA233_StatusCheck(&hi2c1, INA233_SLAVE_3);
-    status = INA233_StatusCheck(&hi2c1, INA233_SLAVE_4);
 
   /* USER CODE END WHILE */
   }

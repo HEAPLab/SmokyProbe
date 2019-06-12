@@ -26,8 +26,9 @@
  extern "C" {
 #endif
 
+HAL_StatusTypeDef INA233_Init(I2C_HandleTypeDef *, uint16_t);
 
-HAL_StatusTypeDef INA233_GetManufactureInfo(I2C_HandleTypeDef *, uint16_t, INA233_ManufactureInfo *);
+HAL_StatusTypeDef INA233_GetDeviceInfo(I2C_HandleTypeDef *, uint16_t, INA233_DeviceInfo *);
 
 HAL_StatusTypeDef INA233_StatusCheck(I2C_HandleTypeDef *, uint16_t);
 
