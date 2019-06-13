@@ -18,6 +18,7 @@
   */
 
 #include "ina233_hal_if.h"
+#include <math.h>
 
 
 HAL_StatusTypeDef INA233_Init(
@@ -118,3 +119,89 @@ HAL_StatusTypeDef INA233_StatusCheck(
 	return status;
 }
 
+
+float INA233_To_RealValue(int16_t reg_value, float m, int16_t R, uint16_t b)
+{
+	return (1.0 / m) * (reg_value * pow(10.0, -R) - b);
+}
+
+
+HAL_StatusTypeDef INA233_ReadInputCurrent(
+		I2C_HandleTypeDef * i2c_handle, uint16_t slave_addr, float * value)
+{
+	HAL_StatusTypeDef status = HAL_OK;
+	uint8_t cmd = INA233_READ_IN;
+	uint16_t recv_data;
+
+	status = HAL_I2C_Master_Transmit(i2c_handle, slave_addr, &cmd, 1, CONF_I2C_BUS_TIMEOUT);
+	status = HAL_I2C_Master_Receive(i2c_handle, slave_addr, (uint8_t *) &recv_data, 2, CONF_I2C_BUS_TIMEOUT);
+	if (status == HAL_ERROR) {
+		  asm("nop");
+		  return status;
+	}
+
+	float m = (1.0 / INA233_CURRENT_LSB);
+	*value = INA233_To_RealValue(recv_data, m, 0, 0);
+
+	return status;
+}
+
+HAL_StatusTypeDef INA233_ReadInputVoltage(
+		I2C_HandleTypeDef * i2c_handle, uint16_t slave_addr, float * value)
+{
+	HAL_StatusTypeDef status = HAL_OK;
+	uint8_t cmd = INA233_READ_VIN;
+	uint16_t recv_data;
+
+	status = HAL_I2C_Master_Transmit(i2c_handle, slave_addr, &cmd, 1, CONF_I2C_BUS_TIMEOUT);
+	status = HAL_I2C_Master_Receive(i2c_handle, slave_addr, (uint8_t *) &recv_data, 2, CONF_I2C_BUS_TIMEOUT);
+	if (status == HAL_ERROR) {
+		  asm("nop");
+		  return status;
+	}
+
+	*value = INA233_To_RealValue(recv_data, 8, 2, 0);
+
+	return status;
+}
+
+
+HAL_StatusTypeDef INA233_ReadInputPower(
+		I2C_HandleTypeDef * i2c_handle, uint16_t slave_addr, float * value)
+{
+	HAL_StatusTypeDef status = HAL_OK;
+	uint8_t cmd = INA233_READ_PIN;
+	uint16_t recv_data;
+
+	status = HAL_I2C_Master_Transmit(i2c_handle, slave_addr, &cmd, 1, CONF_I2C_BUS_TIMEOUT);
+	status = HAL_I2C_Master_Receive(i2c_handle, slave_addr, (uint8_t *) &recv_data, 2, CONF_I2C_BUS_TIMEOUT);
+	if (status == HAL_ERROR) {
+		  asm("nop");
+		  return status;
+	}
+
+	float m = (1.0 / (25 * INA233_CURRENT_LSB));
+	*value = INA233_To_RealValue(recv_data, m, 0, 0);
+
+	return status;
+}
+
+
+HAL_StatusTypeDef INA233_ReadShuntVoltage(
+		I2C_HandleTypeDef * i2c_handle, uint16_t slave_addr, float * value) {
+
+	HAL_StatusTypeDef status = HAL_OK;
+	uint8_t cmd = INA233_READ_VSHUNT;
+	int16_t recv_data;
+
+	status = HAL_I2C_Master_Transmit(i2c_handle, slave_addr, &cmd, 1, CONF_I2C_BUS_TIMEOUT);
+	status = HAL_I2C_Master_Receive(i2c_handle, slave_addr, (uint8_t *) &recv_data, 2, CONF_I2C_BUS_TIMEOUT);
+	if (status == HAL_ERROR) {
+		  asm("nop");
+		  return status;
+	}
+
+	*value = INA233_To_RealValue(recv_data, 4, 5, 0);
+
+	return status;
+}

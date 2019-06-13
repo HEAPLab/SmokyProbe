@@ -111,8 +111,14 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 
+  float current, power, voltage, vshunt;
+
   while (1)
   {
+	  status = INA233_ReadInputCurrent(&hi2c1, INA233_SLAVE_1, &current);
+	  status = INA233_ReadInputVoltage(&hi2c1, INA233_SLAVE_1, &voltage);
+	  status = INA233_ReadInputPower(&hi2c1, INA233_SLAVE_1, &power);
+	  status = INA233_ReadShuntVoltage(&hi2c1, INA233_SLAVE_1, &vshunt);
 
   /* USER CODE END WHILE */
   }
