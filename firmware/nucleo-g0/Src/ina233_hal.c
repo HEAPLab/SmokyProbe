@@ -41,7 +41,8 @@ HAL_StatusTypeDef INA233_Init(
 	}
 
 	// Calibration
-	uint8_t calib_cmd_data[] = { INA233_MFR_CALIBRATION, INA233_CAL >> 8, INA233_CAL & 255 };
+	uint8_t calib_cmd_data[] = { INA233_MFR_CALIBRATION, INA233_CAL & 255, INA233_CAL >> 8 };
+
 	status = HAL_I2C_Master_Transmit(
 			i2c_handle, slave_addr, calib_cmd_data, sizeof(calib_cmd_data), CONF_I2C_BUS_TIMEOUT);
 	if (status == HAL_ERROR) {
