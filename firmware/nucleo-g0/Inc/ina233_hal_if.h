@@ -43,6 +43,15 @@ HAL_StatusTypeDef INA233_ReadInputPower(I2C_HandleTypeDef *, uint16_t, float *);
 
 HAL_StatusTypeDef INA233_ReadShuntVoltage(I2C_HandleTypeDef *, uint16_t, float *);
 
+HAL_StatusTypeDef INA233_ReadInputPowerSamples(I2C_HandleTypeDef *, uint16_t, INA233_PowerSampling *);
+
+
+HAL_StatusTypeDef INA233_StartEnergySampling(I2C_HandleTypeDef * i2c_handle, uint16_t slave_addr, TIM_HandleTypeDef * htim, INA233_PowerSampling *);
+
+HAL_StatusTypeDef INA233_StopEnergySampling(I2C_HandleTypeDef * i2c_handle, uint16_t slave_addr, TIM_HandleTypeDef * htim, INA233_PowerSampling *, float * value);
+
+HAL_StatusTypeDef INA233_ClearInputEnergy(I2C_HandleTypeDef *, uint16_t);
+
 
 
 #ifdef __cplusplus

@@ -228,3 +228,85 @@ HAL_StatusTypeDef INA233_ReadShuntVoltage(
 
 	return status;
 }
+
+
+HAL_StatusTypeDef INA233_ReadInputPowerSamples(
+		I2C_HandleTypeDef * i2c_handle, uint16_t slave_addr, INA233_PowerSampling * power_sampling)
+{
+	uint8_t cmd[] = { INA233_READ_EIN };
+	uint8_t recv_data[7];
+
+	HAL_StatusTypeDef status = HAL_I2C_Master_Transmit(i2c_handle, slave_addr, cmd, sizeof(cmd), CONF_I2C_BUS_TIMEOUT);
+	status = HAL_I2C_Master_Receive(i2c_handle, slave_addr, (uint8_t *) &recv_data, sizeof(recv_data), CONF_I2C_BUS_TIMEOUT);
+	if (status == HAL_ERROR) {
+		  asm("nop");
+		  return status;
+	}
+
+	power_sampling->accumulator    = (recv_data[2] << 8) | recv_data[1];
+	power_sampling->rollover_count =  recv_data[3];
+	power_sampling->sample_count   = (recv_data[6] << 16) | (recv_data[5] << 8) | recv_data[4];
+	power_sampling->tot_power = (power_sampling->rollover_count * (1 << 16)) + power_sampling->accumulator;
+
+	return status;
+}
+
+
+HAL_StatusTypeDef INA233_StartEnergySampling(
+		I2C_HandleTypeDef * i2c_handle, uint16_t slave_addr, TIM_HandleTypeDef * htim, INA233_PowerSampling * power_sampling)
+{
+	// Clear power sampling
+	INA233_ClearInputEnergy(i2c_handle, slave_addr);
+
+	// Get power samples
+	HAL_StatusTypeDef status = INA233_ReadInputPowerSamples(i2c_handle, slave_addr, power_sampling);
+	if (status == HAL_ERROR) {
+		  asm("nop");
+		  return status;
+	}
+
+	// Start timing
+	status = HAL_TIM_Base_Start(htim);
+
+	return status;
+}
+
+
+HAL_StatusTypeDef INA233_StopEnergySampling(
+		I2C_HandleTypeDef * i2c_handle, uint16_t slave_addr, TIM_HandleTypeDef * htim,
+		INA233_PowerSampling * prev_sampling, float * energy)
+{
+	INA233_PowerSampling curr_sampling;
+
+	// Get power samples
+	HAL_StatusTypeDef status = INA233_ReadInputPowerSamples(i2c_handle, slave_addr, &curr_sampling);
+	if (status == HAL_ERROR) {
+		  asm("nop");
+		  return status;
+	}
+
+	// Stop timing
+	status = HAL_TIM_Base_Stop(htim);
+	uint32_t elapsed_time = __HAL_TIM_GET_COUNTER(htim);
+
+	uint32_t power_acc    = curr_sampling.accumulator - prev_sampling->accumulator;
+	uint32_t sample_count = curr_sampling.sample_count - prev_sampling->sample_count;
+	float power_avg = (float) power_acc / sample_count;
+
+	*energy = power_avg * (elapsed_time * pow(10, -6));
+	return status;
+}
+
+
+HAL_StatusTypeDef INA233_ClearInputEnergy(I2C_HandleTypeDef * i2c_handle, uint16_t slave_addr)
+{
+	uint8_t cmd[] = { INA233_CLEAR_EIN };
+
+	HAL_StatusTypeDef status = HAL_I2C_Master_Transmit(i2c_handle, slave_addr, cmd, 1, CONF_I2C_BUS_TIMEOUT);
+	if (status == HAL_ERROR) {
+		  asm("nop");
+		  return status;
+	}
+
+	return HAL_OK;
+}

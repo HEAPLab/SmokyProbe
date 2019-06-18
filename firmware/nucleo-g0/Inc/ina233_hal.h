@@ -75,9 +75,6 @@
 #define INA233_TI_MFR_REVISION      0xE2
 
 
-#define COEFFICIENT          (0.01 / 8)
-#define toVoltage(x) (x*(0.01/8))
-
 /**
  * @brief Device manufacturing information
  */
@@ -87,6 +84,12 @@ typedef struct {
 	uint8_t rev[3];         /*!< Device revision letter and number */
 } INA233_DeviceInfo;
 
+typedef struct {
+	uint16_t accumulator;
+	uint8_t rollover_count;
+	uint32_t sample_count;
+	uint32_t tot_power;
+} INA233_PowerSampling;
 
 
 #ifdef __cplusplus

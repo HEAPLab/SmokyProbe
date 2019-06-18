@@ -48,10 +48,9 @@ I2C_HandleTypeDef hi2c1;
 
 UART_HandleTypeDef hlpuart1;
 
-/* USER CODE BEGIN PV */
+TIM_HandleTypeDef htim2;
 
-// Defined as global to help debugging with Eclipse
-HAL_StatusTypeDef status = HAL_OK;
+/* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
 
@@ -60,12 +59,19 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_LPUART1_UART_Init(void);
 static void MX_I2C1_Init(void);
+
+static void TIM2_Init(void);
+
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
+UART_HandleTypeDef s_UARTHandle;
+
+HAL_StatusTypeDef status = HAL_OK;
 
 /* USER CODE END 0 */
 
@@ -100,25 +106,36 @@ int main(void)
   MX_GPIO_Init();
   MX_LPUART1_UART_Init();
   MX_I2C1_Init();
+
   /* USER CODE BEGIN 2 */
+
   INA233_Init(&hi2c1, INA233_SLAVE_1);
   INA233_Init(&hi2c1, INA233_SLAVE_2);
   INA233_Init(&hi2c1, INA233_SLAVE_3);
   INA233_Init(&hi2c1, INA233_SLAVE_4);
+
+  TIM2_Init();
 
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 
-  float current, power, voltage, vshunt;
+  float current, power, voltage, vshunt, energy;
+  INA233_PowerSampling power_sampling;
+  int i = 0;
 
+  INA233_StartEnergySampling(&hi2c1, INA233_SLAVE_1, &htim2, &power_sampling);
   while (1)
   {
 	  status = INA233_ReadInputCurrent(&hi2c1, INA233_SLAVE_1, &current);
 	  status = INA233_ReadInputVoltage(&hi2c1, INA233_SLAVE_1, &voltage);
 	  status = INA233_ReadInputPower(&hi2c1, INA233_SLAVE_1, &power);
 	  status = INA233_ReadShuntVoltage(&hi2c1, INA233_SLAVE_1, &vshunt);
+
+	  if (++i == 1000) {
+		  INA233_StopEnergySampling(&hi2c1, INA233_SLAVE_1, &htim2, &power_sampling, &energy);
+	  }
 
   /* USER CODE END WHILE */
   }
@@ -281,6 +298,25 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
 }
+
+static void TIM2_Init(void)
+{
+  __TIM2_CLK_ENABLE();
+  htim2.Instance = TIM2;
+  htim2.Init.Prescaler = 64;  // 64 MHz clock => 1us/cycle
+  htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim2.Init.Period = 0xFFFF;
+  htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  //lptim1.RepetitionCounter = ;
+  //lptim1.AutoReloadPreload = ;
+
+  if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+}
+
+
 
 /* USER CODE BEGIN 4 */
 
