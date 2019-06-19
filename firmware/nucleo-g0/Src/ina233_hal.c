@@ -42,7 +42,7 @@ HAL_StatusTypeDef INA233_Init(
 	}
 
 	// Restore default
-	uint8_t cmd_cfg = INA233_RESTORE_DEFAULT_ALL;
+	uint8_t cmd_cfg[] = { INA233_RESTORE_DEFAULT_ALL };
 	status = HAL_I2C_Master_Transmit(i2c_handle, slave_addr, cmd_cfg, sizeof(cmd_cfg), CONF_I2C_BUS_TIMEOUT);
 	uint8_t cmd_and_data[3];
 

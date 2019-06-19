@@ -84,11 +84,15 @@ typedef struct {
 	uint8_t rev[3];         /*!< Device revision letter and number */
 } INA233_DeviceInfo;
 
+
+/**
+ * @brief Power sampling data
+ */
 typedef struct {
-	uint16_t accumulator;
-	uint8_t rollover_count;
-	uint32_t sample_count;
-	uint32_t tot_power;
+	uint16_t accumulator;   /*!< Power accumulator */
+	uint8_t rollover_count; /*!< Power accumulator rollover count */
+	uint32_t sample_count;  /*!< Sample count */
+	uint32_t tot_power;     /*!< Total accumulated unscaled power */
 } INA233_PowerSampling;
 
 
