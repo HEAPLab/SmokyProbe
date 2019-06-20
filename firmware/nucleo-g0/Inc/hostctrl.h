@@ -1,7 +1,8 @@
 /**
   ******************************************************************************
-  * @file    ina233_hal_conf.h
-  * @brief   This file contains configuration parameters for TI INA233
+  * @file           : hostctrl.h
+  * @brief          : Definitions of data structures for host-side control.
+  *                   This file contains the common defines of the application.
   ******************************************************************************
   * @attention
   *
@@ -13,23 +14,32 @@
   * License. You may obtain a copy of the License at:
   *                        opensource.org/licenses/BSD-3-Clause
   *
- ******************************************************************************
+  ******************************************************************************
   */
 
-#ifndef __TI_INA233_HAL_CONF_H
-#define __TI_INA233_HAL_CONF_H
+#ifndef __HOSTCTRL_H
+#define __HOSTCTRL_H
 
 #ifdef __cplusplus
  extern "C" {
 #endif
 
-#define CONF_NUM_DEVICES            4
-#define CONF_I2C_BUS_TIMEOUT        10
-#define CONF_SHUNT_RESISTOR_VALUE   0.002  // Ohm
-#define CONF_MAX_EXPECTED_CURRENT   10.0   // A
+
+typedef enum {
+	NOP = 0,
+	RESET_DEVICE,
+	GET_DEVICE_INFO,
+	GET_CURRENT,
+	GET_VOLTAGE,
+	GET_VOLTAGE_SHUNT,
+	GET_POWER,
+	START_ENERGY_SAMPLING,
+	STOP_ENERGY_SAMPLING
+} HostSideRequest;
+
 
 #ifdef __cplusplus
  }
 #endif
 
-#endif // __TI_INA233_HAL_CONF_H
+#endif // __HOSTCTRL_H

@@ -21,6 +21,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "ina233_hal_if.h"
+#include "hostctrl.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -72,6 +73,8 @@ UART_HandleTypeDef s_UARTHandle;
 
 HAL_StatusTypeDef status = HAL_OK;
 
+static uint16_t dev_addrs[] = { INA233_SLAVE_1, INA233_SLAVE_2, INA233_SLAVE_3, INA233_SLAVE_4 };
+
 /* USER CODE END 0 */
 
 /**
@@ -105,15 +108,15 @@ int main(void)
   MX_GPIO_Init();
   MX_LPUART1_UART_Init();
   MX_I2C1_Init();
+  TIM2_Init();
 
   /* USER CODE BEGIN 2 */
 
-  INA233_Init(&hi2c1, INA233_SLAVE_1);
-  INA233_Init(&hi2c1, INA233_SLAVE_2);
-  INA233_Init(&hi2c1, INA233_SLAVE_3);
-  INA233_Init(&hi2c1, INA233_SLAVE_4);
-
-  TIM2_Init();
+  // INA233 devices initialization
+  unsigned int i = 0;
+  for (; i < CONF_NUM_DEVICES; ++i) {
+	  INA233_Init(&hi2c1, dev_addrs[i]);
+  }
 
   /* USER CODE END 2 */
 
@@ -121,20 +124,68 @@ int main(void)
   /* USER CODE BEGIN WHILE */
 
   float current, power, voltage, vshunt, energy;
+  uint8_t dev_id = 0;
+  INA233_DeviceInfo dev_info;
   INA233_PowerSampling power_sampling;
-  int i = 0;
 
-  INA233_StartEnergySampling(&hi2c1, INA233_SLAVE_1, &htim2, &power_sampling);
+  HostSideRequest request;
+/*
+  HostSideRequest requests[] = {
+		GET_CURRENT,
+		GET_VOLTAGE,
+		GET_VOLTAGE_SHUNT,
+		GET_POWER,
+		START_ENERGY_SAMPLING,
+		STOP_ENERGY_SAMPLING
+  };
+*/
+  HostSideRequest requests[] = {
+		GET_DEVICE_INFO,
+		START_ENERGY_SAMPLING,
+		GET_POWER,
+		GET_CURRENT,
+		GET_VOLTAGE,
+		STOP_ENERGY_SAMPLING
+  };
+
+  uint8_t j = 0;
+
   while (1)
   {
-	  status = INA233_ReadInputCurrent(&hi2c1, INA233_SLAVE_1, &current);
-	  status = INA233_ReadInputVoltage(&hi2c1, INA233_SLAVE_1, &voltage);
-	  status = INA233_ReadInputPower(&hi2c1, INA233_SLAVE_1, &power);
-	  status = INA233_ReadShuntVoltage(&hi2c1, INA233_SLAVE_1, &vshunt);
+	  if (++j == 6) j = 0;
+	  request = requests[j];
 
-	  if (++i == 1000) {
-		  INA233_StopEnergySampling(&hi2c1, INA233_SLAVE_1, &htim2, &power_sampling, &energy);
+	  switch(request) {
+	  case RESET_DEVICE:
+		  break;
+	  case GET_DEVICE_INFO:
+		  status = INA233_GetDeviceInfo(&hi2c1, dev_addrs[dev_id], &dev_info);
+		  break;
+	  case GET_CURRENT:
+		  status = INA233_ReadInputCurrent(&hi2c1, dev_addrs[dev_id], &current);
+		  break;
+	  case GET_VOLTAGE:
+		  status = INA233_ReadInputVoltage(&hi2c1, dev_addrs[dev_id], &voltage);
+		  break;
+	  case GET_VOLTAGE_SHUNT:
+		  status = INA233_ReadShuntVoltage(&hi2c1, dev_addrs[dev_id], &vshunt);
+		  break;
+	  case GET_POWER:
+		  status = INA233_ReadInputPower(&hi2c1, dev_addrs[dev_id], &power);
+		  break;
+	  case START_ENERGY_SAMPLING:
+		  status = INA233_StartEnergySampling(
+				  &hi2c1, dev_addrs[dev_id], &htim2, &power_sampling);
+		  break;
+	  case STOP_ENERGY_SAMPLING:
+		  status = INA233_StopEnergySampling(
+				  &hi2c1, dev_addrs[dev_id], &htim2, &power_sampling, &energy);
+		  break;
+	  default:
+		  break;
 	  }
+
+//	  HAL_Delay(5000);
 
   /* USER CODE END WHILE */
   }
