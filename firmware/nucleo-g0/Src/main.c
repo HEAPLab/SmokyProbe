@@ -353,7 +353,7 @@ static void TIM2_Init(void)
 {
   __TIM2_CLK_ENABLE();
   htim2.Instance = TIM2;
-  htim2.Init.Prescaler = 64;  // 64 MHz clock => 1us/cycle
+  htim2.Init.Prescaler = 6400;  // 64 MHz clock => 1ms/cycle
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim2.Init.Period = 0xFFFF;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;

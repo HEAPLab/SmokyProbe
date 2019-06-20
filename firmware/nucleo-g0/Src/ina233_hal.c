@@ -292,8 +292,8 @@ HAL_StatusTypeDef INA233_StopEnergySampling(
 	uint32_t power_acc    = curr_sampling.accumulator - prev_sampling->accumulator;
 	uint32_t sample_count = curr_sampling.sample_count - prev_sampling->sample_count;
 	float power_avg = (float) power_acc / sample_count;
+	*energy = power_avg * (elapsed_time * pow(10, -3));
 
-	*energy = power_avg * (elapsed_time * pow(10, -6));
 	return status;
 }
 
