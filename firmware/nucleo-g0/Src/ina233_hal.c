@@ -289,8 +289,14 @@ HAL_StatusTypeDef INA233_StopEnergySampling(
 	status = HAL_TIM_Base_Stop(htim);
 	uint32_t elapsed_time = __HAL_TIM_GET_COUNTER(htim);
 
+	// Compute average power and energy
 	uint32_t power_acc    = curr_sampling.accumulator - prev_sampling->accumulator;
 	uint32_t sample_count = curr_sampling.sample_count - prev_sampling->sample_count;
+	if (sample_count == 0) {
+		*energy = 0.0;
+		return status;
+	}
+
 	float power_avg = (float) power_acc / sample_count;
 	*energy = power_avg * (elapsed_time * pow(10, -3));
 
