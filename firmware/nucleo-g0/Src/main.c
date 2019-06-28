@@ -19,6 +19,9 @@
 /* USER CODE END Header */
 
 /* Includes ------------------------------------------------------------------*/
+#include <string.h>
+#include <stdio.h>
+
 #include "main.h"
 #include "ina233_hal_if.h"
 #include "hostctrl.h"
@@ -59,7 +62,6 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_LPUART1_UART_Init(void);
 static void MX_I2C1_Init(void);
-
 static void TIM2_Init(void);
 
 /* USER CODE BEGIN PFP */
@@ -120,74 +122,123 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+/*
+  // Welcome message
+  unsigned char * welcome_msg = "SmokyProbe: Connected!"; //INA233_STR_NR_SLAVES " channels available"
+  uint8_t init_msg[100];
+  init_msg[PKT_CHANNEL_ID]  = 255;
+  init_msg[PKT_REPLY_CODE]  = 255;
+  init_msg[PKT_DATA_LENGTH] = strlen(welcome_msg);
+  HAL_UART_Transmit(&hlpuart1, (uint8_t*) init_msg, PKT_REPLY_HEADER_LENGTH, 0xFFFF);
+  HAL_UART_Transmit(&hlpuart1, welcome_msg, strlen(welcome_msg), 0xFFFF);
 
+  */
+  // Request/reply
   float current, power, voltage, vshunt, energy;
-  uint8_t dev_id = 0;
   INA233_DeviceInfo dev_info;
   INA233_PowerSampling power_sampling;
 
-  HostSideRequest request;
-/*
-  HostSideRequest requests[] = {
-		GET_CURRENT,
-		GET_VOLTAGE,
-		GET_VOLTAGE_SHUNT,
-		GET_POWER,
-		START_ENERGY_SAMPLING,
-		STOP_ENERGY_SAMPLING
-  };
-*/
-  HostSideRequest requests[] = {
-		GET_DEVICE_INFO,
-		START_ENERGY_SAMPLING,
-		GET_POWER,
-		GET_CURRENT,
-		GET_VOLTAGE,
-		STOP_ENERGY_SAMPLING
-  };
+  uint8_t request[5];
+  uint8_t ch_id = 0;
+  uint8_t host_data = 255;
+  HostSideRequest reqcode;
 
-  uint8_t j = 0;
+  uint8_t reply_header[3];
+  char reply_data[PKT_REPLY_DATA_MAX_LENGTH];
+  unsigned short int data_to_send;
 
   while (1)
   {
-	  if (++j == 6) j = 0;
-	  request = requests[j];
+	  // Get the host-side request
+	  status = HAL_UART_Receive(&hlpuart1, request, sizeof(RequestMessage), HAL_MAX_DELAY);
+	  ch_id     = request[PKT_CHANNEL_ID];
+	  reqcode   = (HostSideRequest) request[PKT_REQUEST_CODE];
+	  host_data = request[PKT_REQUEST_DATA_START];
 
-	  switch(request) {
-	  case RESET_DEVICE:
+	  if (ch_id >= INA233_NR_SLAVES) {
+		  reqcode = NOP;
+		  reply_header[PKT_DATA_LENGTH] = 1;
+		  snprintf(reply_data, 1, "%d", INVALID_CHANNEL_ID);
+	  }
+
+	  // Prepare reply...
+	  reply_header[PKT_CHANNEL_ID] = ch_id;
+	  reply_header[PKT_REPLY_CODE] = (uint8_t) reqcode;
+
+	  // Request handling
+	  switch(reqcode) {
+	  case NOP:
+		  data_to_send = 1;
 		  break;
 	  case GET_DEVICE_INFO:
-		  status = INA233_GetDeviceInfo(&hi2c1, dev_addrs[dev_id], &dev_info);
+		  status = INA233_GetDeviceInfo(&hi2c1, dev_addrs[ch_id], &dev_info);
+		  snprintf(reply_data, PKT_REPLY_DATA_MAX_LENGTH, "%s %s %s \n\r",
+				  &dev_info.producer[1],
+				  &dev_info.model[1],
+				  &dev_info.rev[1]);
+		  data_to_send = 1;
 		  break;
+
 	  case GET_CURRENT:
-		  status = INA233_ReadInputCurrent(&hi2c1, dev_addrs[dev_id], &current);
+		  status = INA233_ReadInputCurrent(&hi2c1, dev_addrs[ch_id], &current);
+		  snprintf(reply_data, 12, "%f", current);
+		  data_to_send = 1;
 		  break;
 	  case GET_VOLTAGE:
-		  status = INA233_ReadInputVoltage(&hi2c1, dev_addrs[dev_id], &voltage);
+		  status = INA233_ReadInputVoltage(&hi2c1, dev_addrs[ch_id], &voltage);
+		  snprintf(reply_data, 12, "%f", voltage);
+		  data_to_send = 1;
 		  break;
 	  case GET_VOLTAGE_SHUNT:
-		  status = INA233_ReadShuntVoltage(&hi2c1, dev_addrs[dev_id], &vshunt);
+		  status = INA233_ReadShuntVoltage(&hi2c1, dev_addrs[ch_id], &vshunt);
+		  snprintf(reply_data, 12, "%f", vshunt);
+		  data_to_send = 1;
 		  break;
 	  case GET_POWER:
-		  status = INA233_ReadInputPower(&hi2c1, dev_addrs[dev_id], &power);
+		  status = INA233_ReadInputPower(&hi2c1, dev_addrs[ch_id], &power);
+		  snprintf(reply_data, 12, "%f", power);
+		  data_to_send = 1;
 		  break;
+	  case GET_SAMPLES:
+		  status = INA233_ReadInputCurrent(&hi2c1, dev_addrs[ch_id], &current);
+		  status = INA233_ReadInputVoltage(&hi2c1, dev_addrs[ch_id], &voltage);
+		  status = INA233_ReadShuntVoltage(&hi2c1, dev_addrs[ch_id], &vshunt);
+		  status = INA233_ReadInputPower(&hi2c1, dev_addrs[ch_id], &power);
+		  snprintf(reply_data, 100, "%.3f %.3f %.4f %.4f", current, voltage, power, vshunt);
+		  data_to_send = 1;
+		  break;
+
 	  case START_ENERGY_SAMPLING:
 		  status = INA233_StartEnergySampling(
-				  &hi2c1, dev_addrs[dev_id], &htim2, &power_sampling);
+				  &hi2c1, dev_addrs[ch_id], &htim2, &power_sampling);
 		  break;
 	  case STOP_ENERGY_SAMPLING:
 		  status = INA233_StopEnergySampling(
-				  &hi2c1, dev_addrs[dev_id], &htim2, &power_sampling, &energy);
+				  &hi2c1, dev_addrs[ch_id], &htim2, &power_sampling, &energy);
 		  break;
+
 	  default:
+		  reply_header[PKT_DATA_LENGTH] = 1;
+		  snprintf(reply_data, 1, "%d", INVALID_REQUEST_CODE);
+		  data_to_send = 1;
 		  break;
 	  }
 
-//	  HAL_Delay(5000);
+	  // Send reply
+	  if (data_to_send) {
+		  reply_header[PKT_DATA_LENGTH] = strlen(reply_data);
+		  status = HAL_UART_Transmit(&hlpuart1, (uint8_t *) reply_header, 3, HAL_MAX_DELAY);
+		  status = HAL_UART_Transmit(&hlpuart1, (uint8_t *) reply_data, reply_header[PKT_DATA_LENGTH], HAL_MAX_DELAY);
+		  data_to_send = 0;
+		  memset(reply_data, 0, PKT_REPLY_DATA_MAX_LENGTH);
+	  }
+
+	  HAL_Delay(500);
 
   /* USER CODE END WHILE */
   }
 
+  return 0;
 }
 
 /**

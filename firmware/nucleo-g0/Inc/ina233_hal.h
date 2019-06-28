@@ -33,6 +33,8 @@
 #define INA233_CURRENT_LSB  (CONF_MAX_EXPECTED_CURRENT / (1 << 15))
 #define INA233_CAL          (uint16_t)(0.00512 / (INA233_CURRENT_LSB * CONF_SHUNT_RESISTOR_VALUE)) // = 8258
 
+#define INA233_STR_NR_SLAVES   "4"
+#define INA233_NR_SLAVES        4
 
 // HAL API will take care of adding the R/W bit
 #define INA233_SLAVE_1 (0b1000000 << 1)

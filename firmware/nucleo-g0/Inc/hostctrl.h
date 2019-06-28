@@ -17,13 +17,30 @@
   ******************************************************************************
   */
 
-#ifndef __HOSTCTRL_H
-#define __HOSTCTRL_H
+#ifndef __SMOKYPROBE_HOSTCTRL_H
+#define __SMOKYPROBE_HOSTCTRL_H
 
 #ifdef __cplusplus
  extern "C" {
 #endif
 
+#define PKT_REPLY_DATA_MAX_LENGTH  100
+#define PKT_REPLY_HEADER_LENGTH    3
+
+#define PKT_CHANNEL_ID      0
+#define PKT_REQUEST_CODE    1
+#define PKT_REPLY_CODE      PKT_REQUEST_CODE
+#define PKT_DATA_LENGTH     2
+//#define PKT_REPLY_DATA_START 3
+
+#define PKT_REQUEST_DATA_START  2
+
+
+typedef struct {
+	uint8_t dev_id;
+	uint8_t req_code;
+	uint8_t data;
+}  RequestMessage;
 
 typedef enum {
 	NOP = 0,
@@ -33,13 +50,21 @@ typedef enum {
 	GET_VOLTAGE,
 	GET_VOLTAGE_SHUNT,
 	GET_POWER,
+	GET_SAMPLES,
 	START_ENERGY_SAMPLING,
 	STOP_ENERGY_SAMPLING
 } HostSideRequest;
+
+typedef enum {
+	VALID_REQUEST = 0,
+	INVALID_CHANNEL_ID,
+	INVALID_REQUEST_CODE
+} ErrorCode;
+
 
 
 #ifdef __cplusplus
  }
 #endif
 
-#endif // __HOSTCTRL_H
+#endif // __SMOKYPROBE_HOSTCTRL_H
