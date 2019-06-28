@@ -69,8 +69,6 @@ static void TIM2_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-UART_HandleTypeDef s_UARTHandle;
-
 HAL_StatusTypeDef status = HAL_OK;
 
 static uint16_t dev_addrs[] = { INA233_SLAVE_1, INA233_SLAVE_2, INA233_SLAVE_3, INA233_SLAVE_4 };
@@ -231,7 +229,7 @@ void SystemClock_Config(void)
   /** Initializes the peripherals clocks 
   */
   PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_LPUART1|RCC_PERIPHCLK_I2C1;
-  PeriphClkInit.Lpuart1ClockSelection = RCC_LPUART1CLKSOURCE_PCLK1;
+  PeriphClkInit.Lpuart1ClockSelection = RCC_SYSCLKSOURCE_HSI; //RCC_LPUART1CLKSOURCE_PCLK1;
   PeriphClkInit.I2c1ClockSelection = RCC_I2C1CLKSOURCE_PCLK1;
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
   {
@@ -285,6 +283,7 @@ static void MX_I2C1_Init(void)
 
 }
 
+
 /**
   * @brief LPUART1 Initialization Function
   * @param None
@@ -294,6 +293,7 @@ static void MX_LPUART1_UART_Init(void)
 {
 
   /* USER CODE BEGIN LPUART1_Init 0 */
+	__LPUART1_CLK_ENABLE();
 
   /* USER CODE END LPUART1_Init 0 */
 
@@ -301,8 +301,8 @@ static void MX_LPUART1_UART_Init(void)
 
   /* USER CODE END LPUART1_Init 1 */
   hlpuart1.Instance = LPUART1;
-  hlpuart1.Init.BaudRate = 209700;
-  hlpuart1.Init.WordLength = UART_WORDLENGTH_7B;
+  hlpuart1.Init.BaudRate = 115200;
+  hlpuart1.Init.WordLength = UART_WORDLENGTH_8B;
   hlpuart1.Init.StopBits = UART_STOPBITS_1;
   hlpuart1.Init.Parity = UART_PARITY_NONE;
   hlpuart1.Init.Mode = UART_MODE_TX_RX;
