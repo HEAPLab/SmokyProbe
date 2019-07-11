@@ -43,14 +43,17 @@ HAL_StatusTypeDef INA233_Init(
 
 	// Restore default
 	uint8_t cmd_cfg[] = { INA233_RESTORE_DEFAULT_ALL };
-	status = HAL_I2C_Master_Transmit(i2c_handle, slave_addr, cmd_cfg, sizeof(cmd_cfg), CONF_I2C_BUS_TIMEOUT);
+	status = HAL_I2C_Master_Transmit(i2c_handle,
+			slave_addr, cmd_cfg, sizeof(cmd_cfg), CONF_I2C_BUS_TIMEOUT);
 	uint8_t cmd_and_data[3];
 
 	// Device configuration
 	cmd_and_data[0] = INA233_DEVICE_CONFIG;
 	uint8_t dev_cfg;
-	status = HAL_I2C_Master_Transmit(i2c_handle, slave_addr, cmd_and_data, 1, CONF_I2C_BUS_TIMEOUT);
-	status = HAL_I2C_Master_Receive(i2c_handle, slave_addr, &dev_cfg, sizeof(dev_cfg), CONF_I2C_BUS_TIMEOUT);
+	status = HAL_I2C_Master_Transmit(i2c_handle,
+			slave_addr, cmd_and_data, 1, CONF_I2C_BUS_TIMEOUT);
+	status = HAL_I2C_Master_Receive(i2c_handle,
+			slave_addr, &dev_cfg, sizeof(dev_cfg), CONF_I2C_BUS_TIMEOUT);
 	if (status == HAL_ERROR) {
 		  asm("nop");
 	}
@@ -58,8 +61,10 @@ HAL_StatusTypeDef INA233_Init(
 	// ADC Configuration
 	cmd_and_data[0] = INA233_ADC_CONFIG;
 	uint16_t adc_cfg;
-	status = HAL_I2C_Master_Transmit(i2c_handle, slave_addr, cmd_and_data, 1, CONF_I2C_BUS_TIMEOUT);
-	status = HAL_I2C_Master_Receive(i2c_handle, slave_addr, (uint8_t *) &adc_cfg, sizeof(adc_cfg), CONF_I2C_BUS_TIMEOUT);
+	status = HAL_I2C_Master_Transmit(i2c_handle,
+			slave_addr, cmd_and_data, 1, CONF_I2C_BUS_TIMEOUT);
+	status = HAL_I2C_Master_Receive(i2c_handle,
+			slave_addr, (uint8_t *) &adc_cfg, sizeof(adc_cfg), CONF_I2C_BUS_TIMEOUT);
 	if (status == HAL_ERROR) {
 		  asm("nop");
 	}
@@ -68,7 +73,8 @@ HAL_StatusTypeDef INA233_Init(
 	cmd_and_data[0] = INA233_MFR_CALIBRATION;
 	cmd_and_data[1] = INA233_CAL & 255;
 	cmd_and_data[2] = INA233_CAL >> 8;
-	status = HAL_I2C_Master_Transmit(i2c_handle, slave_addr, cmd_and_data, 3, CONF_I2C_BUS_TIMEOUT);
+	status = HAL_I2C_Master_Transmit(i2c_handle,
+			slave_addr, cmd_and_data, 3, CONF_I2C_BUS_TIMEOUT);
 	if (status == HAL_ERROR) {
 		  asm("nop");
 	}
@@ -133,7 +139,7 @@ HAL_StatusTypeDef INA233_StatusCheck(
 	int i = 0;
 	for (; i < 4; ++i) {
 		status = HAL_I2C_Master_Transmit(i2c_handle, slave_addr, &cmds[i], 1, CONF_I2C_BUS_TIMEOUT);
-		status = HAL_I2C_Master_Receive(i2c_handle, slave_addr, (uint8_t *) &recv_data, 2, CONF_I2C_BUS_TIMEOUT);
+		status = HAL_I2C_Master_Receive(i2c_handle, slave_addr, (uint8_t *) &recv_word, 2, CONF_I2C_BUS_TIMEOUT);
 		if (status == HAL_ERROR) {
 			asm("nop");
 		}
