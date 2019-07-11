@@ -98,6 +98,13 @@ typedef struct {
 } INA233_PowerSampling;
 
 
+typedef enum {
+	NONE = 0,
+	FAULT_CML,     // Communication
+	FAULT_MFL,     // Manufacturing
+} INA233_FaultType;
+
+
 #ifdef __cplusplus
  }
 #endif

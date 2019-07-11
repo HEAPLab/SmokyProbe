@@ -28,7 +28,7 @@ HAL_StatusTypeDef INA233_Init(
 	HAL_StatusTypeDef status = HAL_OK;
 
 	// Status check
-	status = INA233_StatusCheck(i2c_handle, slave_addr);
+	status = INA233_InitThresholds(i2c_handle, slave_addr);
 	if (status == HAL_ERROR) {
 		  asm("nop");
 		  return status;
@@ -124,16 +124,16 @@ HAL_StatusTypeDef INA233_GetDeviceInfo(
 }
 
 
-HAL_StatusTypeDef INA233_StatusCheck(
+HAL_StatusTypeDef INA233_InitThresholds(
 		I2C_HandleTypeDef * i2c_handle, uint16_t slave_addr)
 {
 	HAL_StatusTypeDef status = HAL_OK;
-	uint8_t cmd[] = { INA233_STATUS_WORD };
-	uint16_t recv_data;  // default value = 1000h = 4096d
 
-	// Status
-	status = HAL_I2C_Master_Transmit(i2c_handle, slave_addr, cmd, 1, CONF_I2C_BUS_TIMEOUT);
-	status = HAL_I2C_Master_Receive(i2c_handle, slave_addr, (uint8_t *) &recv_data, 2, CONF_I2C_BUS_TIMEOUT);
+	uint8_t cmd = INA233_STATUS_WORD;
+	uint16_t recv_word; //// default value = 1000h = 4096d
+	status = HAL_I2C_Master_Transmit(i2c_handle, slave_addr, &cmd, 1, CONF_I2C_BUS_TIMEOUT);
+	status = HAL_I2C_Master_Receive(
+			i2c_handle, slave_addr, (uint8_t *) &recv_word, 2, CONF_I2C_BUS_TIMEOUT);
 	if (status == HAL_ERROR) {
 		  asm("nop");
 		  return status;
@@ -155,6 +155,32 @@ HAL_StatusTypeDef INA233_StatusCheck(
 			asm("nop");
 		}
 	}
+
+	return status;
+}
+
+
+HAL_StatusTypeDef INA233_StatusCheck(
+		I2C_HandleTypeDef * i2c_handle, uint16_t slave_addr, INA233_FaultType * fault)
+{
+	HAL_StatusTypeDef status = HAL_OK;
+
+	uint8_t cmd = INA233_STATUS_BYTE;
+	uint8_t recv_byte;
+
+	// Status byte
+	status = HAL_I2C_Master_Transmit(i2c_handle, slave_addr, &cmd, 1, CONF_I2C_BUS_TIMEOUT);
+	status = HAL_I2C_Master_Receive(
+			i2c_handle, slave_addr, (uint8_t *) &recv_byte, 1, CONF_I2C_BUS_TIMEOUT);
+	if (status == HAL_ERROR) {
+		  asm("nop");
+		  return status;
+	}
+
+	if (recv_byte == (1 << 1))
+		*fault = FAULT_CML;
+
+	*fault = NONE;
 
 	return status;
 }

@@ -31,9 +31,11 @@ float INA233_To_RealValue(int16_t reg_value, float m, int16_t R, uint16_t b);
 
 HAL_StatusTypeDef INA233_Init(I2C_HandleTypeDef *, uint16_t);
 
+HAL_StatusTypeDef INA233_InitThresholds(I2C_HandleTypeDef *, uint16_t);
+
 HAL_StatusTypeDef INA233_GetDeviceInfo(I2C_HandleTypeDef *, uint16_t, INA233_DeviceInfo *);
 
-HAL_StatusTypeDef INA233_StatusCheck(I2C_HandleTypeDef *, uint16_t);
+HAL_StatusTypeDef INA233_StatusCheck(I2C_HandleTypeDef *, uint16_t, INA233_FaultType *);
 
 HAL_StatusTypeDef INA233_ReadInputCurrent(I2C_HandleTypeDef *, uint16_t, float *);
 
