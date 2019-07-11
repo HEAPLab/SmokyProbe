@@ -24,27 +24,22 @@
  extern "C" {
 #endif
 
-#define PKT_REPLY_DATA_MAX_LENGTH  100
-#define PKT_REPLY_HEADER_LENGTH    3
+#define MSG_REQUEST_LEN         3
+#define MSG_REPLY_HEADER_LEN    4
+#define MSG_REPLY_DATA_LEN_MAX  100
 
-#define PKT_CHANNEL_ID      0
-#define PKT_REQUEST_CODE    1
-#define PKT_REPLY_CODE      PKT_REQUEST_CODE
-#define PKT_DATA_LENGTH     2
-//#define PKT_REPLY_DATA_START 3
+#define MSG_POS_CHANNEL_ID      0
+#define MSG_POS_REQUEST_CODE    1
+#define MSG_POS_DATA            2
 
-#define PKT_REQUEST_DATA_START  2
+#define MSG_POS_REPLY_CODE      MSG_POS_REQUEST_CODE
+#define MSG_POS_REPLY_STATUS    2
+#define MSG_POS_REPLY_DATA_LEN  3
 
-
-typedef struct {
-	uint8_t dev_id;
-	uint8_t req_code;
-	uint8_t data;
-}  RequestMessage;
 
 typedef enum {
 	NOP = 0,
-	RESET_DEVICE,
+	CHECK_DEVICE,
 	GET_DEVICE_INFO,
 	GET_CURRENT,
 	GET_VOLTAGE,
@@ -53,14 +48,14 @@ typedef enum {
 	GET_SAMPLES,
 	START_ENERGY_SAMPLING,
 	STOP_ENERGY_SAMPLING
-} HostSideRequest;
+} HostRequestCode;
 
 typedef enum {
-	VALID_REQUEST = 0,
-	INVALID_CHANNEL_ID,
-	INVALID_REQUEST_CODE
+	REQUEST_OK = 0,
+	CHANNEL_NOT_VALID,
+	REQUEST_NOT_VALID,
+	HW_ERROR
 } ErrorCode;
-
 
 
 #ifdef __cplusplus
