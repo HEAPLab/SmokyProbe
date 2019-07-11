@@ -65,6 +65,9 @@ static void MX_I2C1_Init(void);
 static void TIM2_Init(void);
 
 /* USER CODE BEGIN PFP */
+static void Run_Interactive(void);
+static void Run_Batch(void);
+static void Test_UART_Echo(void);
 
 /* USER CODE END PFP */
 
@@ -73,7 +76,9 @@ static void TIM2_Init(void);
 
 HAL_StatusTypeDef status = HAL_OK;
 
-static uint16_t dev_addrs[] = { INA233_SLAVE_1, INA233_SLAVE_2, INA233_SLAVE_3, INA233_SLAVE_4 };
+static uint16_t dev_addrs[] = {
+		INA233_SLAVE_1, INA233_SLAVE_2, INA233_SLAVE_3, INA233_SLAVE_4
+};
 
 /* USER CODE END 0 */
 
@@ -118,128 +123,217 @@ int main(void)
 	  INA233_Init(&hi2c1, dev_addrs[i]);
   }
 
+  status = HAL_TIM_Base_Start(&htim2);
+
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-/*
-  // Welcome message
-  unsigned char * welcome_msg = "SmokyProbe: Connected!"; //INA233_STR_NR_SLAVES " channels available"
-  uint8_t init_msg[100];
-  init_msg[PKT_CHANNEL_ID]  = 255;
-  init_msg[PKT_REPLY_CODE]  = 255;
-  init_msg[PKT_DATA_LENGTH] = strlen(welcome_msg);
-  HAL_UART_Transmit(&hlpuart1, (uint8_t*) init_msg, PKT_REPLY_HEADER_LENGTH, 0xFFFF);
-  HAL_UART_Transmit(&hlpuart1, welcome_msg, strlen(welcome_msg), 0xFFFF);
-
-  */
-  // Request/reply
-  float current, power, voltage, vshunt, energy;
-  INA233_DeviceInfo dev_info;
-  INA233_PowerSampling power_sampling;
-
-  uint8_t request[5];
-  uint8_t ch_id = 0;
-  uint8_t host_data = 255;
-  HostSideRequest reqcode;
-
-  uint8_t reply_header[3];
-  char reply_data[PKT_REPLY_DATA_MAX_LENGTH];
-  unsigned short int data_to_send;
 
   while (1)
   {
-	  // Get the host-side request
-	  status = HAL_UART_Receive(&hlpuart1, request, sizeof(RequestMessage), HAL_MAX_DELAY);
-	  ch_id     = request[PKT_CHANNEL_ID];
-	  reqcode   = (HostSideRequest) request[PKT_REQUEST_CODE];
-	  host_data = request[PKT_REQUEST_DATA_START];
-
-	  if (ch_id >= INA233_NR_SLAVES) {
-		  reqcode = NOP;
-		  reply_header[PKT_DATA_LENGTH] = 1;
-		  snprintf(reply_data, 1, "%d", INVALID_CHANNEL_ID);
-	  }
-
-	  // Prepare reply...
-	  reply_header[PKT_CHANNEL_ID] = ch_id;
-	  reply_header[PKT_REPLY_CODE] = (uint8_t) reqcode;
-
-	  // Request handling
-	  switch(reqcode) {
-	  case NOP:
-		  data_to_send = 1;
-		  break;
-	  case GET_DEVICE_INFO:
-		  status = INA233_GetDeviceInfo(&hi2c1, dev_addrs[ch_id], &dev_info);
-		  snprintf(reply_data, PKT_REPLY_DATA_MAX_LENGTH, "%s %s %s \n\r",
-				  &dev_info.producer[1],
-				  &dev_info.model[1],
-				  &dev_info.rev[1]);
-		  data_to_send = 1;
-		  break;
-
-	  case GET_CURRENT:
-		  status = INA233_ReadInputCurrent(&hi2c1, dev_addrs[ch_id], &current);
-		  snprintf(reply_data, 12, "%f", current);
-		  data_to_send = 1;
-		  break;
-	  case GET_VOLTAGE:
-		  status = INA233_ReadInputVoltage(&hi2c1, dev_addrs[ch_id], &voltage);
-		  snprintf(reply_data, 12, "%f", voltage);
-		  data_to_send = 1;
-		  break;
-	  case GET_VOLTAGE_SHUNT:
-		  status = INA233_ReadShuntVoltage(&hi2c1, dev_addrs[ch_id], &vshunt);
-		  snprintf(reply_data, 12, "%f", vshunt);
-		  data_to_send = 1;
-		  break;
-	  case GET_POWER:
-		  status = INA233_ReadInputPower(&hi2c1, dev_addrs[ch_id], &power);
-		  snprintf(reply_data, 12, "%f", power);
-		  data_to_send = 1;
-		  break;
-	  case GET_SAMPLES:
-		  status = INA233_ReadInputCurrent(&hi2c1, dev_addrs[ch_id], &current);
-		  status = INA233_ReadInputVoltage(&hi2c1, dev_addrs[ch_id], &voltage);
-		  status = INA233_ReadShuntVoltage(&hi2c1, dev_addrs[ch_id], &vshunt);
-		  status = INA233_ReadInputPower(&hi2c1, dev_addrs[ch_id], &power);
-		  snprintf(reply_data, 100, "%.3f %.3f %.4f %.4f", current, voltage, power, vshunt);
-		  data_to_send = 1;
-		  break;
-
-	  case START_ENERGY_SAMPLING:
-		  status = INA233_StartEnergySampling(
-				  &hi2c1, dev_addrs[ch_id], &htim2, &power_sampling);
-		  break;
-	  case STOP_ENERGY_SAMPLING:
-		  status = INA233_StopEnergySampling(
-				  &hi2c1, dev_addrs[ch_id], &htim2, &power_sampling, &energy);
-		  break;
-
-	  default:
-		  reply_header[PKT_DATA_LENGTH] = 1;
-		  snprintf(reply_data, 1, "%d", INVALID_REQUEST_CODE);
-		  data_to_send = 1;
-		  break;
-	  }
-
-	  // Send reply
-	  if (data_to_send) {
-		  reply_header[PKT_DATA_LENGTH] = strlen(reply_data);
-		  status = HAL_UART_Transmit(&hlpuart1, (uint8_t *) reply_header, 3, HAL_MAX_DELAY);
-		  status = HAL_UART_Transmit(&hlpuart1, (uint8_t *) reply_data, reply_header[PKT_DATA_LENGTH], HAL_MAX_DELAY);
-		  data_to_send = 0;
-		  memset(reply_data, 0, PKT_REPLY_DATA_MAX_LENGTH);
-	  }
-
-	  HAL_Delay(500);
+	  Test_Time();
+	  //Test_UART_Echo();
+	  //Run_Interactive();
+	  //Run_Batch();
+	  HAL_Delay(1000);
 
   /* USER CODE END WHILE */
   }
 
   return 0;
 }
+
+
+void Test_Time()
+{
+	uint32_t elapsed_time = __HAL_TIM_GET_COUNTER(&htim2);
+	uint8_t outstr[20];
+	sprintf(outstr, "t=%d \n\r", elapsed_time);
+	HAL_UART_Transmit(&hlpuart1, outstr, strlen(outstr), HAL_MAX_DELAY);
+}
+
+void Test_UART_Echo()
+{
+	uint8_t inbyte;
+	HAL_UART_Receive(&hlpuart1, &inbyte, 1, HAL_MAX_DELAY);
+	HAL_UART_Transmit(&hlpuart1, &inbyte, 1, HAL_MAX_DELAY);
+}
+
+
+void Run_Interactive( )
+{
+	// Request/reply
+	float current, power, voltage, vshunt, energy;
+	INA233_DeviceInfo dev_info;
+	INA233_PowerSampling power_sampling;
+
+	uint8_t request[MSG_REQUEST_LEN];
+	uint8_t ch_id = 0;
+	uint8_t host_data = 255;
+	HostRequestCode reqcode;
+
+	uint8_t reply_header[MSG_REPLY_HEADER_LEN];
+	char reply_data[MSG_REPLY_DATA_LEN_MAX];
+	unsigned short int data_to_send;
+
+
+	// Get the host-side request
+	status = HAL_UART_Receive(&hlpuart1, request, MSG_REQUEST_LEN, HAL_MAX_DELAY);
+	ch_id     = request[MSG_POS_CHANNEL_ID];
+	reqcode   = (HostRequestCode) request[MSG_POS_REQUEST_CODE];
+	host_data = request[MSG_POS_DATA];
+
+	if (ch_id >= INA233_NR_SLAVES) {
+		reply_header[MSG_POS_REPLY_STATUS] = CHANNEL_NOT_VALID;
+		reply_header[MSG_POS_REPLY_DATA_LEN] = 0;
+		reqcode = NOP;
+	}
+
+	// Request handling
+	switch(reqcode) {
+
+	case NOP:
+		data_to_send = 0;
+		break;
+
+	case GET_DEVICE_INFO:
+		status = INA233_GetDeviceInfo(&hi2c1, dev_addrs[ch_id], &dev_info);
+		if (status == HAL_OK) {
+		  sprintf(reply_data, "%s-%s-%s",
+				  dev_info.producer, dev_info.model, dev_info.rev);
+		  reply_header[MSG_POS_REPLY_STATUS] = REQUEST_OK;
+		  reply_header[MSG_POS_REPLY_DATA_LEN] = strlen(reply_data);
+		  data_to_send = 1;
+		}
+		break;
+
+	case GET_CURRENT:
+		status = INA233_ReadInputCurrent(&hi2c1, dev_addrs[ch_id], &current);
+		if (status == HAL_OK) {
+		  sprintf(reply_data, "%2.6f", current);
+		  reply_header[MSG_POS_REPLY_STATUS] = REQUEST_OK;
+		  reply_header[MSG_POS_REPLY_DATA_LEN] = strlen(reply_data);
+		  data_to_send = 1;
+		}
+		break;
+
+	case GET_VOLTAGE:
+		status = INA233_ReadInputVoltage(&hi2c1, dev_addrs[ch_id], &voltage);
+		if (status == HAL_OK) {
+			sprintf(reply_data, "%2.3f", voltage);
+			reply_header[MSG_POS_REPLY_STATUS] = REQUEST_OK;
+			reply_header[MSG_POS_REPLY_DATA_LEN] = strlen(reply_data);
+			data_to_send = 1;
+		}
+		break;
+
+	case GET_VOLTAGE_SHUNT:
+		status = INA233_ReadShuntVoltage(&hi2c1, dev_addrs[ch_id], &vshunt);
+		if (status == HAL_OK) {
+			sprintf(reply_data, "%2.3f", vshunt);
+			reply_header[MSG_POS_REPLY_STATUS] = REQUEST_OK;
+			reply_header[MSG_POS_REPLY_DATA_LEN] = strlen(reply_data);
+			data_to_send = 1;
+		}
+		break;
+
+	case GET_POWER:
+	  status = INA233_ReadInputPower(&hi2c1, dev_addrs[ch_id], &power);
+	  if (status == HAL_OK) {
+		  sprintf(reply_data, "%4.6f", power);
+		  reply_header[MSG_POS_REPLY_STATUS] = REQUEST_OK;
+		  reply_header[MSG_POS_REPLY_DATA_LEN] = strlen(reply_data);
+		  data_to_send = 1;
+	  }
+	  break;
+
+	case GET_SAMPLES:
+	  status = INA233_ReadInputCurrent(&hi2c1, dev_addrs[ch_id], &current);
+	  status |= INA233_ReadInputVoltage(&hi2c1, dev_addrs[ch_id], &voltage);
+	  status |= INA233_ReadShuntVoltage(&hi2c1, dev_addrs[ch_id], &vshunt);
+	  status |= INA233_ReadInputPower(&hi2c1, dev_addrs[ch_id], &power);
+	  if (status == HAL_OK) {
+		  sprintf(reply_data, "%2.6f %2.3f %2.4f %4.6f",
+				  current, voltage, power, vshunt);
+		  reply_header[MSG_POS_REPLY_STATUS] = REQUEST_OK;
+		  reply_header[MSG_POS_REPLY_DATA_LEN] = strlen(reply_data);
+		  data_to_send = 1;
+	  }
+	  break;
+
+	case START_ENERGY_SAMPLING:
+	  status = INA233_StartEnergySampling(
+			  &hi2c1, dev_addrs[ch_id], &htim2, &power_sampling);
+	  if (status == HAL_OK) {
+		  reply_header[MSG_POS_REPLY_STATUS] = REQUEST_OK;
+		  reply_header[MSG_POS_REPLY_DATA_LEN] = 0;
+		  data_to_send = 0;
+	  }
+	  break;
+
+	case STOP_ENERGY_SAMPLING:
+	  status = INA233_StopEnergySampling(
+			  &hi2c1, dev_addrs[ch_id], &htim2, &power_sampling, &energy);
+	  if (status == HAL_OK) {
+		  sprintf(reply_data, "%4.6f", energy);
+		  reply_header[MSG_POS_REPLY_STATUS] = REQUEST_OK;
+		  reply_header[MSG_POS_REPLY_DATA_LEN] = strlen(reply_data);
+		  data_to_send = 1;
+	  }
+	  break;
+
+	default:
+	  reply_header[MSG_POS_REPLY_STATUS] = REQUEST_NOT_VALID;
+	  reply_header[MSG_POS_REPLY_DATA_LEN] = 0;
+	  data_to_send = 0;
+	  break;
+	}
+
+	// Send header
+	if (status != HAL_OK) {
+		reply_header[MSG_POS_REPLY_STATUS] = HW_ERROR;
+		reply_header[MSG_POS_REPLY_DATA_LEN] = 0;
+		data_to_send = 0;
+	}
+	reply_header[MSG_POS_CHANNEL_ID] = ch_id;
+	reply_header[MSG_POS_REPLY_CODE] = (uint8_t) reqcode;
+	status = HAL_UART_Transmit(&hlpuart1,
+		  (uint8_t *) reply_header, MSG_REPLY_HEADER_LEN, HAL_MAX_DELAY);
+
+	// Send reply
+	if (data_to_send) {
+		status = HAL_UART_Transmit(&hlpuart1,
+			  (uint8_t *) reply_data, reply_header[MSG_POS_REPLY_DATA_LEN], HAL_MAX_DELAY);
+		memset(reply_data, 0, MSG_REPLY_DATA_LEN_MAX);
+		reply_header[MSG_POS_REPLY_DATA_LEN] = 0;
+		data_to_send = 0;
+	}
+}
+
+
+void Run_Batch() {
+	float current, power, voltage, vshunt;
+	uint8_t reply_data[MSG_REPLY_DATA_LEN_MAX];
+
+	uint8_t ch_id = 0;
+	for (; ch_id < 4; ++ch_id) {
+	  status = INA233_ReadInputCurrent(&hi2c1, dev_addrs[ch_id], &current);
+	  status |= INA233_ReadInputVoltage(&hi2c1, dev_addrs[ch_id], &voltage);
+	  status |= INA233_ReadShuntVoltage(&hi2c1, dev_addrs[ch_id], &vshunt);
+	  status |= INA233_ReadInputPower(&hi2c1, dev_addrs[ch_id], &power);
+	  if (status == HAL_OK) {
+		  sprintf(reply_data, "[%d] %2.6f %2.3f %2.4f %4.6f \n\r",
+				  ch_id, current, voltage, power, vshunt);
+		  size_t len = strlen((char *)reply_data);
+		  status = HAL_UART_Transmit(&hlpuart1,
+				  (uint8_t *) reply_data, len, HAL_MAX_DELAY);
+		  memset(reply_data, 0, MSG_REPLY_DATA_LEN_MAX);
+	  }
+	}
+}
+
 
 /**
   * @brief System Clock Configuration
@@ -352,7 +446,7 @@ static void MX_LPUART1_UART_Init(void)
 
   /* USER CODE END LPUART1_Init 1 */
   hlpuart1.Instance = LPUART1;
-  hlpuart1.Init.BaudRate = 115200;
+  hlpuart1.Init.BaudRate = 57600;
   hlpuart1.Init.WordLength = UART_WORDLENGTH_8B;
   hlpuart1.Init.StopBits = UART_STOPBITS_1;
   hlpuart1.Init.Parity = UART_PARITY_NONE;
@@ -404,7 +498,7 @@ static void TIM2_Init(void)
 {
   __TIM2_CLK_ENABLE();
   htim2.Instance = TIM2;
-  htim2.Init.Prescaler = 6400;  // 64 MHz clock => 1ms/cycle
+  htim2.Init.Prescaler = (6400) - 1;  // 64 MHz clock => 1ms/cycle
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim2.Init.Period = 0xFFFF;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
@@ -453,3 +547,4 @@ void assert_failed(uint8_t *file, uint32_t line)
 #endif /* USE_FULL_ASSERT */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
+
