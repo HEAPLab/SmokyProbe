@@ -19,6 +19,7 @@
 
 #include "ina233_hal_if.h"
 #include <math.h>
+#include <string.h>
 
 
 HAL_StatusTypeDef INA233_Init(
@@ -94,20 +95,30 @@ HAL_StatusTypeDef INA233_GetDeviceInfo(
 		INA233_DeviceInfo * info)
 {
 	HAL_StatusTypeDef status = HAL_OK;
+	unsigned char buffer[10];
 
 	uint8_t cmd[] = { INA233_MFR_ID };
-	status = HAL_I2C_Master_Transmit(i2c_handle, slave_addr, cmd, 1, CONF_I2C_BUS_TIMEOUT);
-	status = HAL_I2C_Master_Receive(i2c_handle, slave_addr, info->producer, sizeof(info->producer), CONF_I2C_BUS_TIMEOUT);
+	status = HAL_I2C_Master_Transmit(i2c_handle,
+			slave_addr, cmd, 1, CONF_I2C_BUS_TIMEOUT);
+	status = HAL_I2C_Master_Receive(i2c_handle,
+			slave_addr, buffer, sizeof(info->producer)+1, CONF_I2C_BUS_TIMEOUT);
 	if (status != HAL_OK) return status;
+	strncpy(info->producer, (char *) &buffer[1], buffer[0]);
 
 	cmd[0] = INA233_MFR_MODEL;
-	status = HAL_I2C_Master_Transmit(i2c_handle, slave_addr, cmd, 1, CONF_I2C_BUS_TIMEOUT);
-	status = HAL_I2C_Master_Receive(i2c_handle, slave_addr, info->model, sizeof(info->model), CONF_I2C_BUS_TIMEOUT);
+	status = HAL_I2C_Master_Transmit(i2c_handle,
+			slave_addr, cmd, 1, CONF_I2C_BUS_TIMEOUT);
+	status = HAL_I2C_Master_Receive(i2c_handle,
+			slave_addr, buffer, sizeof(info->model)+1, CONF_I2C_BUS_TIMEOUT);
 	if (status != HAL_OK) return status;
+	strncpy(info->model, (char *) &buffer[1], buffer[0]);
 
 	cmd[0] = INA233_MFR_REVISION;
-	status = HAL_I2C_Master_Transmit(i2c_handle, slave_addr, cmd, 1, CONF_I2C_BUS_TIMEOUT);
-	status = HAL_I2C_Master_Receive(i2c_handle, slave_addr, info->rev, sizeof(info->rev), CONF_I2C_BUS_TIMEOUT);
+	status = HAL_I2C_Master_Transmit(i2c_handle,
+			slave_addr, cmd, 1, CONF_I2C_BUS_TIMEOUT);
+	status = HAL_I2C_Master_Receive(i2c_handle,
+			slave_addr, buffer, sizeof(info->rev)+1, CONF_I2C_BUS_TIMEOUT);
+	strncpy(info->rev, (char *) &buffer[1], buffer[0]);
 
 	return status;
 }

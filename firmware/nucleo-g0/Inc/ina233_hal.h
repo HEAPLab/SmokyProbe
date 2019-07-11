@@ -81,9 +81,9 @@
  * @brief Device manufacturing information
  */
 typedef struct {
-	uint8_t producer[3];    /*!< Manufacturer ID (in ASCII) */
-	uint8_t model[7];       /*!< Device number (in ASCII) */
-	uint8_t rev[3];         /*!< Device revision letter and number */
+	char producer[2];    /*!< Manufacturer ID (in ASCII) */
+	char model[6];       /*!< Device number (in ASCII) */
+	char rev[2];         /*!< Device revision letter and number */
 } INA233_DeviceInfo;
 
 
