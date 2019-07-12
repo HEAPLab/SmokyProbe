@@ -53,8 +53,14 @@ HAL_StatusTypeDef INA233_Init(
 	uint8_t dev_cfg;
 	status = HAL_I2C_Master_Transmit(i2c_handle,
 			slave_addr, cmd_and_data, 1, CONF_I2C_BUS_TIMEOUT);
-	status = HAL_I2C_Master_Receive(i2c_handle,
+	status |= HAL_I2C_Master_Receive(i2c_handle,
 			slave_addr, &dev_cfg, sizeof(dev_cfg), CONF_I2C_BUS_TIMEOUT);
+
+	// Auto-clear energy readings
+	cmd_and_data[1] = (dev_cfg | (1 << 2));
+	status = HAL_I2C_Master_Transmit(i2c_handle,
+			slave_addr, cmd_and_data, 2, CONF_I2C_BUS_TIMEOUT);
+
 	if (status == HAL_ERROR) {
 		  asm("nop");
 	}
@@ -285,7 +291,9 @@ HAL_StatusTypeDef INA233_ReadShuntVoltage(
 
 
 HAL_StatusTypeDef INA233_ReadInputPowerSamples(
-		I2C_HandleTypeDef * i2c_handle, uint16_t slave_addr, INA233_PowerSampling * power_sampling)
+		I2C_HandleTypeDef * i2c_handle,
+		uint16_t slave_addr,
+		INA233_PowerSampling * power_sampling)
 {
 	uint8_t cmd[] = { INA233_READ_EIN };
 	uint8_t recv_data[7];
@@ -302,37 +310,56 @@ HAL_StatusTypeDef INA233_ReadInputPowerSamples(
 	power_sampling->accumulator    = (recv_data[2] << 8) | recv_data[1];
 	power_sampling->rollover_count =  recv_data[3];
 	power_sampling->sample_count   = (recv_data[6] << 16) | (recv_data[5] << 8) | recv_data[4];
-	power_sampling->tot_power = (power_sampling->rollover_count * (1 << 16)) + power_sampling->accumulator;
+	power_sampling->tot_acc_unscaled_power =
+			(power_sampling->rollover_count * (1 << 16)) + power_sampling->accumulator;
 
 	return status;
 }
 
 
 HAL_StatusTypeDef INA233_StartEnergySampling(
-		I2C_HandleTypeDef * i2c_handle, uint16_t slave_addr, TIM_HandleTypeDef * htim, INA233_PowerSampling * power_sampling)
+		I2C_HandleTypeDef * i2c_handle,
+		uint16_t slave_addr,
+		TIM_HandleTypeDef * htim)
 {
-	// Clear power sampling
-	INA233_ClearInputEnergy(i2c_handle, slave_addr);
+	// ADC Configuration...
+	uint8_t cmd_and_data[2];
+	HAL_StatusTypeDef status = HAL_I2C_Master_Transmit(i2c_handle,
+			slave_addr, cmd_and_data, 1, CONF_I2C_BUS_TIMEOUT);
+	uint16_t adc_cfg;
+	status |= HAL_I2C_Master_Receive(i2c_handle,
+			slave_addr, (uint8_t *) &adc_cfg, sizeof(adc_cfg), CONF_I2C_BUS_TIMEOUT);
+	// ...Triggered mode
+	cmd_and_data[1] = adc_cfg | (1 << 1) | (1 << 0);
+	status |= HAL_I2C_Master_Transmit(i2c_handle, slave_addr, cmd_and_data, 2, CONF_I2C_BUS_TIMEOUT);
 
-	// Get power samples
-	HAL_StatusTypeDef status = INA233_ReadInputPowerSamples(i2c_handle, slave_addr, power_sampling);
+	// Get power samples (start sampling)
+	INA233_PowerSampling power_sampling;
+	status |= INA233_ReadInputPowerSamples(i2c_handle, slave_addr, &power_sampling);
 	if (status == HAL_ERROR) {
 		  asm("nop");
 		  return status;
 	}
 
 	// Start timing
-	status = HAL_TIM_Base_Start(htim);
+	status |= HAL_TIM_Base_Start(htim);
 
 	return status;
 }
 
 
 HAL_StatusTypeDef INA233_StopEnergySampling(
-		I2C_HandleTypeDef * i2c_handle, uint16_t slave_addr, TIM_HandleTypeDef * htim,
-		INA233_PowerSampling * prev_sampling, float * energy)
+		I2C_HandleTypeDef * i2c_handle,
+		uint16_t slave_addr,
+		TIM_HandleTypeDef * htim,
+		float * energy)
 {
 	INA233_PowerSampling curr_sampling;
+
+	// Stop timing
+	HAL_TIM_Base_Stop(htim);
+	volatile uint32_t millisec_count = __HAL_TIM_GET_COUNTER(htim);
+	__HAL_TIM_SET_COUNTER(htim, 0);
 
 	// Get power samples
 	HAL_StatusTypeDef status = INA233_ReadInputPowerSamples(i2c_handle, slave_addr, &curr_sampling);
@@ -341,20 +368,12 @@ HAL_StatusTypeDef INA233_StopEnergySampling(
 		  return status;
 	}
 
-	// Stop timing
-	status = HAL_TIM_Base_Stop(htim);
-	uint32_t elapsed_time = __HAL_TIM_GET_COUNTER(htim);
-
 	// Compute average power and energy
-	uint32_t power_acc    = curr_sampling.accumulator - prev_sampling->accumulator;
-	uint32_t sample_count = curr_sampling.sample_count - prev_sampling->sample_count;
-	if (sample_count == 0) {
-		*energy = 0.0;
-		return status;
-	}
-
-	float power_avg = (float) power_acc / sample_count;
-	*energy = power_avg * (elapsed_time * pow(10, -3));
+	volatile float unscaled_avg_power =
+			(float) curr_sampling.tot_acc_unscaled_power / curr_sampling.sample_count;
+	volatile float m = (1.0 / (25 * INA233_CURRENT_LSB));
+	volatile float avg_power = INA233_To_RealValue(unscaled_avg_power, m, 0, 0);
+	*energy = avg_power * (millisec_count * 0.001);
 
 	return status;
 }

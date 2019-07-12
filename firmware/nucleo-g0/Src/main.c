@@ -308,7 +308,7 @@ static void MX_TIM2_Init(void)
   htim2.Instance = TIM2;
   htim2.Init.Prescaler = 15999;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim2.Init.Period = 999;
+  htim2.Init.Period = 0xFFFFFFFF;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
@@ -371,7 +371,6 @@ void Run_Interactive( )
   // Request/reply
   float current, power, voltage, vshunt, energy;
   INA233_DeviceInfo dev_info;
-  INA233_PowerSampling power_sampling;
 
   uint8_t request[MSG_REQUEST_LEN];
   uint8_t ch_id = 0;
@@ -467,8 +466,7 @@ void Run_Interactive( )
 	  break;
 
 	case START_ENERGY_SAMPLING:
-	  status = INA233_StartEnergySampling(
-			  &hi2c1, dev_addrs[ch_id], &htim2, &power_sampling);
+	  status = INA233_StartEnergySampling(&hi2c1, dev_addrs[ch_id], &htim2);
 	  if (status == HAL_OK) {
 		  reply_header[MSG_POS_REPLY_STATUS] = REQUEST_OK;
 		  reply_header[MSG_POS_REPLY_DATA_LEN] = 0;
@@ -477,8 +475,7 @@ void Run_Interactive( )
 	  break;
 
 	case STOP_ENERGY_SAMPLING:
-	  status = INA233_StopEnergySampling(
-			  &hi2c1, dev_addrs[ch_id], &htim2, &power_sampling, &energy);
+	  status = INA233_StopEnergySampling(&hi2c1, dev_addrs[ch_id], &htim2, &energy);
 	  if (status == HAL_OK) {
 		  sprintf(reply_data, "%4.6f", energy);
 		  reply_header[MSG_POS_REPLY_STATUS] = REQUEST_OK;

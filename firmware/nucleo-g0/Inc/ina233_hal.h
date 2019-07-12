@@ -94,7 +94,7 @@ typedef struct {
 	uint16_t accumulator;   /*!< Power accumulator */
 	uint8_t rollover_count; /*!< Power accumulator rollover count */
 	uint32_t sample_count;  /*!< Sample count */
-	uint32_t tot_power;     /*!< Total accumulated unscaled power */
+	uint32_t tot_acc_unscaled_power;     /*!< Total accumulated unscaled power */
 } INA233_PowerSampling;
 
 
