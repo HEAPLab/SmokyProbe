@@ -121,10 +121,10 @@ int main(void)
   for (; i < CONF_NUM_DEVICES; ++i) {
 	  INA233_Init(&hi2c1, dev_addrs[i]);
   }
-
+/*
   status = HAL_TIM_Base_Start(&htim2);
 
-
+*/
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -132,15 +132,15 @@ int main(void)
 
   while (1)
   {
-	  Test_Time();
-	  //Test_UART_Echo();
-	  //Run_Interactive();
-	  //Run_Batch();
-	  HAL_Delay(1000);
-
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+
+	//Test_Time();
+	//Test_UART_Echo();
+	Run_Interactive();
+	//Run_Batch();
+	HAL_Delay(100);
   }
   /* USER CODE END 3 */
 }
@@ -352,10 +352,10 @@ static void MX_GPIO_Init(void)
 
 void Test_Time()
 {
-	uint32_t count = __HAL_TIM_GET_COUNTER(&htim2);
-	uint8_t outstr[20];
-	sprintf(outstr, "t=%u \n\r", count);
-	HAL_UART_Transmit(&hlpuart1, outstr, strlen(outstr), HAL_MAX_DELAY);
+  volatile unsigned long count = __HAL_TIM_GET_COUNTER(&htim2);
+  uint8_t outstr[20];
+  sprintf(outstr, "t=%lu \n\r", count);
+  HAL_UART_Transmit(&hlpuart1, outstr, strlen(outstr), HAL_MAX_DELAY);
 }
 
 void Test_UART_Echo()
@@ -364,7 +364,6 @@ void Test_UART_Echo()
   HAL_UART_Receive(&hlpuart1, &inbyte, 1, HAL_MAX_DELAY);
   HAL_UART_Transmit(&hlpuart1, &inbyte, 1, HAL_MAX_DELAY);
 }
-
 
 void Run_Interactive( )
 {
