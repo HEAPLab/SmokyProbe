@@ -27,7 +27,7 @@
 							<option id="fr.ac6.managedbuild.option.gnu.cross.instructionSet.1375333252" name="Instruction Set" superClass="fr.ac6.managedbuild.option.gnu.cross.instructionSet" useByScannerDiscovery="false" value="fr.ac6.managedbuild.option.gnu.cross.instructionSet.thumbII" valueType="enumerated" />
 							<option id="fr.ac6.managedbuild.option.gnu.cross.fpu.1630908892" name="Floating point hardware" superClass="fr.ac6.managedbuild.option.gnu.cross.fpu" useByScannerDiscovery="false" value="fr.ac6.managedbuild.option.gnu.cross.fpu.no" valueType="enumerated" />
 							<option id="fr.ac6.managedbuild.option.gnu.cross.floatabi.1892397560" name="Floating-point ABI" superClass="fr.ac6.managedbuild.option.gnu.cross.floatabi" useByScannerDiscovery="false" value="fr.ac6.managedbuild.option.gnu.cross.floatabi.soft" valueType="enumerated" />
-							<option id="fr.ac6.managedbuild.option.gnu.cross.path.1007517892" superClass="fr.ac6.managedbuild.option.gnu.cross.path" useByScannerDiscovery="false" value="/usr/lib/sw4stm32/plugins/fr.ac6.mcu.externaltools.arm-none.linux64_1.17.0.201812190825/tools/st-gnu-arm-gcc-7-2018-q2-update_gdb-5_4-2016q3/bin" valueType="string" />
+							<option id="fr.ac6.managedbuild.option.gnu.cross.path.1007517892" name="Path" superClass="fr.ac6.managedbuild.option.gnu.cross.path" useByScannerDiscovery="false" value="/usr/lib/sw4stm32/plugins/fr.ac6.mcu.externaltools.arm-none.linux64_1.17.0.201812190825/tools/st-gnu-arm-gcc-7-2018-q2-update_gdb-5_4-2016q3/bin" valueType="string" />
 							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="fr.ac6.managedbuild.targetPlatform.gnu.cross.788189752" isAbstract="false" osList="all" superClass="fr.ac6.managedbuild.targetPlatform.gnu.cross" />
 							<builder buildPath="${workspace_loc:/smoky-probe-fw}/Debug" id="fr.ac6.managedbuild.builder.gnu.cross.1444734853" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="Gnu Make Builder" superClass="fr.ac6.managedbuild.builder.gnu.cross">
 								<outputEntries>
@@ -51,6 +51,7 @@
 									<listOptionValue builtIn="false" value="STM32G071xx" />
 								</option>
 								<option id="fr.ac6.managedbuild.gnu.c.compiler.option.misc.other.1068499796" superClass="fr.ac6.managedbuild.gnu.c.compiler.option.misc.other" useByScannerDiscovery="false" value="-fmessage-length=0" valueType="string" />
+								<option id="fr.ac6.managedbuid.gnu.c.compiler.option.misc.other.1304737177" name="Other flags" superClass="fr.ac6.managedbuid.gnu.c.compiler.option.misc.other" useByScannerDiscovery="false" value="-fmessage-length=0 -O0" valueType="string" />
 								<inputType id="fr.ac6.managedbuild.tool.gnu.cross.c.compiler.input.c.1568021552" superClass="fr.ac6.managedbuild.tool.gnu.cross.c.compiler.input.c" />
 								<inputType id="fr.ac6.managedbuild.tool.gnu.cross.c.compiler.input.s.1803597962" superClass="fr.ac6.managedbuild.tool.gnu.cross.c.compiler.input.s" />
 							</tool>
@@ -78,7 +79,7 @@
 								<option id="fr.ac6.managedbuild.tool.gnu.cross.c.linker.script.1479751644" name="Linker Script (-T)" superClass="fr.ac6.managedbuild.tool.gnu.cross.c.linker.script" useByScannerDiscovery="false" value="../STM32G071RBTx_FLASH.ld" valueType="string" />
 								<option id="gnu.c.link.option.libs.835635777" name="Libraries (-l)" superClass="gnu.c.link.option.libs" useByScannerDiscovery="false" />
 								<option id="gnu.c.link.option.paths.2111369549" name="Library search path (-L)" superClass="gnu.c.link.option.paths" useByScannerDiscovery="false" />
-								<option id="gnu.c.link.option.ldflags.1744801879" name="Linker flags" superClass="gnu.c.link.option.ldflags" useByScannerDiscovery="false" value="-specs=nosys.specs -specs=nano.specs" valueType="string" />
+								<option id="gnu.c.link.option.ldflags.1744801879" name="Linker flags" superClass="gnu.c.link.option.ldflags" useByScannerDiscovery="false" value="-specs=nosys.specs -specs=nano.specs -u _printf_float" valueType="string" />
 								<option id="gnu.c.link.option.other.1030822115" name="Other options (-Xlinker [option])" superClass="gnu.c.link.option.other" useByScannerDiscovery="false" />
 								<inputType id="cdt.managedbuild.tool.gnu.c.linker.input.578692829" superClass="cdt.managedbuild.tool.gnu.c.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)" />
@@ -189,7 +190,7 @@
 								<option id="fr.ac6.managedbuild.tool.gnu.cross.c.linker.script.1479751644" name="Linker Script (-T)" superClass="fr.ac6.managedbuild.tool.gnu.cross.c.linker.script" value="../STM32G071RBTx_FLASH.ld" valueType="string" />
 								<option id="gnu.c.link.option.libs.835635777" name="Libraries (-l)" superClass="gnu.c.link.option.libs" />
 								<option id="gnu.c.link.option.paths.2111369549" name="Library search path (-L)" superClass="gnu.c.link.option.paths" />
-								<option id="gnu.c.link.option.ldflags.1744801879" name="Linker flags" superClass="gnu.c.link.option.ldflags" value="-specs=nosys.specs -specs=nano.specs" valueType="string" />
+								<option id="gnu.c.link.option.ldflags.1744801879" name="Linker flags" superClass="gnu.c.link.option.ldflags" useByScannerDiscovery="false" value="-specs=nosys.specs -specs=nano.specs -u _printf_float" valueType="string" />
 								<option id="gnu.c.link.option.other.1030822115" name="Other options (-Xlinker [option])" superClass="gnu.c.link.option.other" useByScannerDiscovery="false" />
 								<inputType id="cdt.managedbuild.tool.gnu.c.linker.input.578692829" superClass="cdt.managedbuild.tool.gnu.c.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)" />
@@ -226,19 +227,21 @@
 		</cconfiguration>
 	</storageModule>
 	<storageModule moduleId="cdtBuildSystem" version="4.0.0">
-		<project id="smoky-probe-fw.fr.ac6.managedbuild.target.gnu.cross.exe.1109654273" name="Executable" projectType="fr.ac6.managedbuild.target.gnu.cross.exe" />
-	</storageModule>
-	<storageModule moduleId="scannerConfiguration">
-		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="" />
-		<scannerConfigBuildInfo instanceId="fr.ac6.managedbuild.config.gnu.cross.exe.debug.2010824445;fr.ac6.managedbuild.config.gnu.cross.exe.debug.2010824445.;fr.ac6.managedbuild.tool.gnu.cross.c.compiler.675163721;fr.ac6.managedbuild.tool.gnu.cross.c.compiler.input.c.1568021552">
-			<autodiscovery enabled="false" problemReportingEnabled="true" selectedProfileId="" />
-		</scannerConfigBuildInfo>
+		<project id="smokyprobe.fr.ac6.managedbuild.target.gnu.cross.exe.1511363487" name="Executable" projectType="fr.ac6.managedbuild.target.gnu.cross.exe" />
 	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders" />
 	<storageModule moduleId="refreshScope" versionNumber="2">
-		<configuration artifactName="${ProjName}" configurationName="Debug">
+		<configuration configurationName="Debug">
 			<resource resourceType="PROJECT" workspacePath="smoky-probe-fw" />
 		</configuration>
+		<configuration configurationName="Release" />
 	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.make.core.buildtargets" />
+	<storageModule moduleId="scannerConfiguration">
+		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="" />
+		<scannerConfigBuildInfo instanceId="fr.ac6.managedbuild.config.gnu.cross.exe.debug.1003142083;fr.ac6.managedbuild.config.gnu.cross.exe.debug.1003142083.;fr.ac6.managedbuild.tool.gnu.cross.c.compiler.121706712;fr.ac6.managedbuild.tool.gnu.cross.c.compiler.input.c.1619240757">
+			<autodiscovery enabled="false" problemReportingEnabled="true" selectedProfileId="" />
+		</scannerConfigBuildInfo>
+	</storageModule>
+	<storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings" />
 </cproject>
