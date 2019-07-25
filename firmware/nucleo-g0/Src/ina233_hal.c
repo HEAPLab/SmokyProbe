@@ -358,7 +358,7 @@ HAL_StatusTypeDef INA233_StopEnergySampling(
 
 	// Stop timing
 	HAL_TIM_Base_Stop(htim);
-	volatile uint32_t millisec_count = __HAL_TIM_GET_COUNTER(htim);
+	uint32_t millisec_count = __HAL_TIM_GET_COUNTER(htim);
 	__HAL_TIM_SET_COUNTER(htim, 0);
 
 	// Get power samples
@@ -369,10 +369,10 @@ HAL_StatusTypeDef INA233_StopEnergySampling(
 	}
 
 	// Compute average power and energy
-	volatile float unscaled_avg_power =
+	float unscaled_avg_power =
 			(float) curr_sampling.tot_acc_unscaled_power / curr_sampling.sample_count;
-	volatile float m = (1.0 / (25 * INA233_CURRENT_LSB));
-	volatile float avg_power = INA233_To_RealValue(unscaled_avg_power, m, 0, 0);
+	float m = (1.0 / (25 * INA233_CURRENT_LSB));
+	float avg_power = INA233_To_RealValue(unscaled_avg_power, m, 0, 0);
 	*energy = avg_power * (millisec_count * 0.001);
 
 	return status;
