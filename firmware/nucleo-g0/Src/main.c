@@ -121,10 +121,9 @@ int main(void)
   for (; i < CONF_NUM_DEVICES; ++i) {
 	  INA233_Init(&hi2c1, dev_addrs[i]);
   }
-/*
-  status = HAL_TIM_Base_Start(&htim2);
 
-*/
+  // status = HAL_TIM_Base_Start(&htim2);
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -140,7 +139,7 @@ int main(void)
 	//Test_UART_Echo();
 	Run_Interactive();
 	//Run_Batch();
-	HAL_Delay(100);
+	//HAL_Delay(10);
   }
   /* USER CODE END 3 */
 }
