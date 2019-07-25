@@ -405,7 +405,10 @@ void Run_Interactive( )
 		  sprintf(reply_data, "%s-%s-%s",
 				  dev_info.producer, dev_info.model, dev_info.rev);
 		  reply_header[MSG_POS_REPLY_STATUS] = REQUEST_OK;
-		  reply_header[MSG_POS_REPLY_DATA_LEN] = strlen(reply_data);
+		  reply_header[MSG_POS_REPLY_DATA_LEN] =
+				  strlen(dev_info.producer) +
+				  strlen(dev_info.model) +
+				  strlen(dev_info.rev) + 2;
 		  data_to_send = 1;
 		}
 		break;
