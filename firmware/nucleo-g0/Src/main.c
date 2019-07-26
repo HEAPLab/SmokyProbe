@@ -378,6 +378,7 @@ void Run_Interactive( )
   uint8_t reply_header[MSG_REPLY_HEADER_LEN];
   char reply_data[MSG_REPLY_DATA_LEN_MAX];
   unsigned short int data_to_send;
+  INA233_FaultType fault;
 
   // Get the host-side request
   status = HAL_UART_Receive(&hlpuart1, request, MSG_REQUEST_LEN, HAL_MAX_DELAY);
@@ -396,6 +397,16 @@ void Run_Interactive( )
 
 	case NOP:
 		data_to_send = 0;
+		break;
+
+	case CHECK_DEVICE:
+		status = INA233_StatusCheck(&hi2c1, dev_addrs[ch_id], &fault);
+		if (status == HAL_OK) {
+		  sprintf(reply_data, "%d", fault);
+		  reply_header[MSG_POS_REPLY_STATUS] = REQUEST_OK;
+		  reply_header[MSG_POS_REPLY_DATA_LEN] = 1;
+		  data_to_send = 1;
+		}
 		break;
 
 	case GET_DEVICE_INFO:
