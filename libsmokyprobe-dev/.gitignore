@@ -1,0 +1,7 @@
+*.o
+*.so
+*.a
+CMakeFiles/*
+*.make
+*.bin
+*.hex
