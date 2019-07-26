@@ -37,12 +37,11 @@ Probe_UART::Probe_UART(std::string dev_path):
 	Probe(dev_path),
 	logger(log4cpp::Category::getInstance(std::string("probe_uart")))
 {
-
 	// Logger
 	try {
 		log4cpp::PropertyConfigurator::configure(std::string(LOGFILE));
 	} catch(log4cpp::ConfigureFailure & ex) {
-		std::cout << "Missing log4cpp file..." << std::endl;
+		std::cout << "probe_uart: missing log4cpp file!" << std::endl;
 	}
 
 	// Serial device
@@ -164,7 +163,8 @@ ExitCode Probe_UART::recv_data(uint8_t * reply_header, uint8_t * reply_data)
 	// Reply data
 	memset(reply_data, 0, MSG_REPLY_DATA_LEN_MAX);
 	ssize_t nb = read(dev_fd, reply_data, reply_header[MSG_POS_REPLY_DATA_LEN]);
-	logger.debug("recv_data: len=%d/%d", nb, reply_header[MSG_POS_REPLY_DATA_LEN]);
+	logger.debug("recv_data: len = %d/%d",
+	             nb, reply_header[MSG_POS_REPLY_DATA_LEN]);
 	print_packet_content("recv_data: reply_data = ",
 	                     reply_data,
 	                     reply_header[MSG_POS_REPLY_DATA_LEN]);
@@ -208,16 +208,17 @@ DeviceStatus Probe_UART::check_channel(uint8_t channel_id)
 
 	switch (dev_data[0]) {
 	case 0:
-		std::cout << "OK " << std::endl;
+		logger.debug("check_channel: %d = OK", channel_id);
 		return DeviceStatus::OK;
 	case 1:
-		std::cout << "Communication fault" << std::endl;
+		logger.warn("check_channel: %d = communication fault?", channel_id);
 		return DeviceStatus::FAULT_COMM;
 	case 2:
-		std::cout << "Manufacturing fault" << std::endl;
+		logger.debug("check_channel: %d = manufacturing fault?", channel_id);
 		return DeviceStatus::FAULT_MANUFACT;
 	default:
-		std::cout << "Unknown value: " << dev_data[0] << std::endl;
+		logger.debug("check_channel: %d = unknown value (%d)",
+		             channel_id, dev_data[0]);
 		return DeviceStatus::UNKNOWN_VALUE;
 	}
 
@@ -228,7 +229,7 @@ DeviceStatus Probe_UART::check_channel(uint8_t channel_id)
 float Probe_UART::get_current_A(uint8_t channel_id)
 {
 	float value = send_request_and_get_data_float(channel_id, GET_CURRENT);
-	std::cout << "Current (A): " << value << std::endl;
+	logger.debug("[%d] current: %f A", channel_id, value);
 	return value;
 }
 
@@ -236,7 +237,7 @@ float Probe_UART::get_current_A(uint8_t channel_id)
 float Probe_UART::get_voltage_V(uint8_t channel_id)
 {
 	float value = send_request_and_get_data_float(channel_id, GET_VOLTAGE);
-	std::cout << "Voltage (V): " << value << std::endl;
+	logger.debug("[%d] voltage: %f V", channel_id, value);
 	return value;
 }
 
@@ -244,7 +245,7 @@ float Probe_UART::get_voltage_V(uint8_t channel_id)
 float Probe_UART::get_power_W(uint8_t channel_id)
 {
 	float value = send_request_and_get_data_float(channel_id, GET_POWER);
-	std::cout << "Power (W): " << value << std::endl;
+	logger.debug("[%d] power: %f W", channel_id, value);
 	return value;
 }
 
@@ -266,6 +267,8 @@ int Probe_UART::start_energy_sampling(uint8_t channel_id)
 	if (ret != ExitCode::SUCCESS) {
 		return 0.0;
 	}
+
+	logger.debug("[%d] start energy sampling...", channel_id);
 	return reply_header[MSG_POS_REPLY_STATUS];
 }
 
@@ -275,7 +278,7 @@ float Probe_UART::stop_energy_sampling(uint8_t channel_id)
 	float value = send_request_and_get_data_float(
 	                  channel_id,
 	                  STOP_ENERGY_SAMPLING);
-	std::cout << "Energy (J): " << value << std::endl;
+	logger.debug("[%d] energy: %f J", channel_id, value);
 	return value;
 }
 
