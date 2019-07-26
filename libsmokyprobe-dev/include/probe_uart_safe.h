@@ -24,7 +24,7 @@ public:
 	Probe_UART_Safe(std::string dev_path)
 		: Probe(dev_path)
 		, __probe(dev_path) {
-		this->sem = sem_open("/smokyprobe-uart-sem", O_CREAT, 0644, 1);
+		this->sem = sem_open("/smokyprobe-uart", O_CREAT, 0644, 1);
 	}
 
 	~Probe_UART_Safe() {
