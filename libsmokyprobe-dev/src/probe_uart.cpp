@@ -26,7 +26,8 @@ void Probe_UART::print_packet_content(
 {
 	std::stringstream data_stream;
 	for (int i = 0; i < size; ++i) {
-		data_stream << " " << static_cast<int>(data[i]);
+		data_stream << " " << static_cast<int>(data[i])
+		            << " ('" << data[i] << "')";
 	}
 	std::string ds(data_stream.str());
 	logger.debug("%s: %s", msg, ds.c_str());
@@ -207,17 +208,17 @@ DeviceStatus Probe_UART::check_channel(uint8_t channel_id)
 	std::string dev_data(send_request_and_get_data(channel_id, CHECK_DEVICE));
 
 	switch (dev_data[0]) {
-	case 0:
+	case '0':
 		logger.debug("check_channel: %d = OK", channel_id);
 		return DeviceStatus::OK;
-	case 1:
+	case '1':
 		logger.warn("check_channel: %d = communication fault?", channel_id);
 		return DeviceStatus::FAULT_COMM;
-	case 2:
+	case '2':
 		logger.debug("check_channel: %d = manufacturing fault?", channel_id);
 		return DeviceStatus::FAULT_MANUFACT;
 	default:
-		logger.debug("check_channel: %d = unknown value (%d)",
+		logger.debug("check_channel: %d = unknown value (%c)",
 		             channel_id, dev_data[0]);
 		return DeviceStatus::UNKNOWN_VALUE;
 	}
