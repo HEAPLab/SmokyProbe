@@ -11,8 +11,6 @@
 
 #include <termios.h>
 
-#define LOGFILE "/home/giuseppe//Development/embedded/workspace_ac6/SmokyProbe/libsmokyprobe-dev/logprobe.properties"
-
 namespace smokyprobe
 {
 
