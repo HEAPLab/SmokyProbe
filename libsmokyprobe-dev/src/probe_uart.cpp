@@ -81,6 +81,7 @@ Probe_UART::~Probe_UART()
 {
 	fsync(dev_fd);
 	close(dev_fd);
+	logger.shutdown();
 }
 
 
