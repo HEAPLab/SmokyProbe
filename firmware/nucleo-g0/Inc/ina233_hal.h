@@ -41,6 +41,10 @@
 #define INA233_SLAVE_2 (0b1000100 << 1)
 #define INA233_SLAVE_3 (0b1001000 << 1)
 #define INA233_SLAVE_4 (0b1001100 << 1)
+#define INA233_SLAVE_5 (0b1000001 << 1)
+#define INA233_SLAVE_6 (0b1000101 << 1)
+#define INA233_SLAVE_7 (0b1001001 << 1)
+#define INA233_SLAVE_8 (0b1001101 << 1)
 
  // PMBus Commands
 #define INA233_CLEAR_FAULTS         0x03
