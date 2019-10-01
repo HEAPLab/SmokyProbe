@@ -82,7 +82,7 @@ public:
 
 	void test_echo(std::string const & str) override {
 		smart_semaphore s(sem);
-		return __probe.test_echo(str);
+		__probe.test_echo(str);
 	}
 
 private:
