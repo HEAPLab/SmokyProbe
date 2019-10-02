@@ -1,1 +1,9 @@
 TODO
+
+
+Troubleshooting
+---------------
+
+- If you have problems in tty communication with the device try the following stty settings:
+
+stty -F /dev/ttyACM0 -hupcl brkint ignpar -icrnl -ixon -opost -onlcr -isig -icanon -iexten -echo -echoe -echok -echoctl -echoke
