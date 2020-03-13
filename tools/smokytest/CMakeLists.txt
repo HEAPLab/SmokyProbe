@@ -21,7 +21,7 @@ include_directories (
 )
 
 link_directories (
-	${LIBSMOKYPROBE_UART_PATH}/build/Debug
+	${LIBSMOKYPROBE_UART_PATH}/build
 )
 
 ## Define the executable
