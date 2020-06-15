@@ -383,7 +383,7 @@ void Run_Interactive( )
 
   // Get the host-side request
   status = HAL_UART_Receive(&hlpuart1, request, MSG_REQUEST_LEN, HAL_MAX_DELAY);
-  ch_id     = request[MSG_POS_CHANNEL_ID];
+  ch_id     = chtoi(request[MSG_POS_CHANNEL_ID]);
   reqcode   = (HostRequestCode) request[MSG_POS_REQUEST_CODE];
   host_data = request[MSG_POS_DATA];
 
@@ -510,8 +510,8 @@ void Run_Interactive( )
 	reply_header[MSG_POS_REPLY_DATA_LEN] = 0;
 	data_to_send = 0;
   }
-  reply_header[MSG_POS_CHANNEL_ID] = ch_id;
-  reply_header[MSG_POS_REPLY_CODE] = (uint8_t) reqcode;
+  reply_header[MSG_POS_CHANNEL_ID] = itoch(ch_id);
+  reply_header[MSG_POS_REPLY_CODE] = reqcode;
   status = HAL_UART_Transmit(&hlpuart1,
 	  (uint8_t *) reply_header, MSG_REPLY_HEADER_LEN, HAL_MAX_DELAY);
 

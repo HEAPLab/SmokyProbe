@@ -14,6 +14,7 @@ enum class ExitCode
     UNKNOWN_ERROR
 };
 
+/*
 enum RequestType {
     NOP,
     CHECK_DEVICE,
@@ -26,7 +27,25 @@ enum RequestType {
     START_ENERGY_SAMPLING,
     STOP_ENERGY_SAMPLING
 };
+*/
 
+typedef char RequestType;
+
+#define NOP                    'x'
+#define CHECK_DEVICE           'C'
+#define GET_DEVICE_INFO        'D'
+#define GET_CURRENT            'I'
+#define GET_VOLTAGE            'V'
+#define GET_VOLTAGE_SHUNT      'v'
+#define GET_POWER              'P'
+#define GET_SAMPLES            'S'
+#define START_ENERGY_SAMPLING  'E'
+#define STOP_ENERGY_SAMPLING   'e'
+
+#define itoch(x) x + 48
+#define chtoi(x) x - 48
+
+#define INCLUDE_NO_DATA        '-'
 
 enum class DeviceStatus
 {

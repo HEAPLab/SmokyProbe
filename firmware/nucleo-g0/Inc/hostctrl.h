@@ -36,7 +36,7 @@
 #define MSG_POS_REPLY_STATUS    2
 #define MSG_POS_REPLY_DATA_LEN  3
 
-
+/*
 typedef enum {
 	NOP = 0,
 	CHECK_DEVICE,
@@ -49,6 +49,23 @@ typedef enum {
 	START_ENERGY_SAMPLING,
 	STOP_ENERGY_SAMPLING
 } HostRequestCode;
+*/
+
+typedef char HostRequestCode;
+
+#define NOP                    'x'
+#define CHECK_DEVICE           'C'
+#define GET_DEVICE_INFO        'D'
+#define GET_CURRENT            'I'
+#define GET_VOLTAGE            'V'
+#define GET_VOLTAGE_SHUNT      'v'
+#define GET_POWER              'P'
+#define GET_SAMPLES            'S'
+#define START_ENERGY_SAMPLING  'E'
+#define STOP_ENERGY_SAMPLING   'e'
+
+#define itoch(x) x + 48
+#define chtoi(x) x - 48
 
 typedef enum {
 	REQUEST_OK = 0,

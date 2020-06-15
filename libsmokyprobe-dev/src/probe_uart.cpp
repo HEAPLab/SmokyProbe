@@ -125,9 +125,10 @@ ExitCode Probe_UART::send_request(
 
 	// Header
 	uint8_t request[MSG_REQUEST_LEN];
-	request[MSG_POS_CHANNEL_ID]   = channel_id;
-	request[MSG_POS_REQUEST_CODE] = (uint8_t) reqcode; // -48
-	request[MSG_POS_DATA]         = 255;
+	request[MSG_POS_CHANNEL_ID]   = itoch(channel_id);
+	request[MSG_POS_REQUEST_CODE] = reqcode;
+	request[MSG_POS_DATA]         = INCLUDE_NO_DATA;
+
 	if (data != nullptr)
 		request[MSG_POS_DATA] = *data;
 	print_packet_content("send_request: request = ", request, MSG_REQUEST_LEN);
