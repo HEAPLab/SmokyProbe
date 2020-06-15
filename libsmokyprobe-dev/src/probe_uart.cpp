@@ -136,7 +136,7 @@ ExitCode Probe_UART::send_request(
 	// Send request
 	ssize_t nb = write(dev_fd, request, sizeof(request));
 	if (nb < 0) {
-		perror("send request error");
+		perror("send_request: error");
 		return ExitCode::WRITE_ERROR;
 	}
 	std::this_thread::sleep_for(std::chrono::milliseconds(50));
