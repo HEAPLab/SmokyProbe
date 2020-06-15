@@ -142,10 +142,16 @@ ExitCode Probe_UART::send_request(
 	std::this_thread::sleep_for(std::chrono::milliseconds(50));
 
 	// Receive reply header
-	nb = read(dev_fd, reply_header, MSG_REPLY_HEADER_LEN);
-	if (nb < 0) {
-		perror("send request error");
-		return ExitCode::READ_ERROR;
+	nb = 0;
+	while (nb < MSG_REPLY_HEADER_LEN) {
+		nb = read(dev_fd, reply_header, MSG_REPLY_HEADER_LEN);
+		if (nb < 0) {
+			perror("send_request: error");
+			return ExitCode::READ_ERROR;
+		}
+		else {
+			logger.debug("send_request: header length  = %d", nb);
+		}
 	}
 	print_packet_content("send_request: reply_header = ",
 	                     reply_header,
