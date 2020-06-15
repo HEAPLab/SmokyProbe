@@ -50,88 +50,24 @@ void print_help(char * execname)
 	          << std::endl;
 }
 
-void print_insta_measure(
-        smokyprobe::Probe_UART & probe,
-        MeasureType measure_type,
-        int max_channel_id)
-{
-	for (int id = 0; id < max_channel_id; ++id) {
-		if (id > 0) std::cout << ",";
 
-		switch (measure_type) {
-		case MeasureType::CURRENT:
-			std::cout << probe.get_current_A(id);
-			break;
-		case MeasureType::VOLTAGE:
-			std::cout << probe.get_voltage_V(id);
-			break;
-		case MeasureType::POWER:
-			std::cout << probe.get_power_W(id);
-			break;
-		}
-		std::cout << std::endl;
+std::list<unsigned int> get_channels_from_string(const char * str)
+{
+	std::string ch_str(str);
+	std::list<unsigned int> ch_list;
+/*
+	size_t start_pos = 0;
+	while () {
+		auto end_pos = ch_str.find(",");
+		std::string token = s.substr(start_pos, end_pos);
+		std::cout << token << std::endl;
+		ch_list.push_back(std:stoi(token));
 	}
+*/
+
+	return ch_list;
 }
 
-void print_avg_measure(
-        smokyprobe::Probe_UART & probe,
-        MeasureType measure_type,
-        unsigned int max_channel_id,
-        unsigned int nr_samples)
-{
-	std::vector<float> avg_values(max_channel_id + 1);
-	for (auto & ch_value : avg_values)
-		ch_value = 0.0;
-
-	for (unsigned int i = 0; i < nr_samples; ++i) {
-		for (int id = 0; id <= max_channel_id; ++id) {
-			switch (measure_type) {
-			case MeasureType::CURRENT:
-				avg_values[id] += probe.get_current_A(id)
-				                  / nr_samples;
-				break;
-			case MeasureType::VOLTAGE:
-				avg_values[id] += probe.get_voltage_V(id)
-				                  / nr_samples;
-				break;
-			case MeasureType::POWER:
-				avg_values[id] += probe.get_power_W(id)
-				                  / nr_samples;
-				break;
-			}
-		}
-	}
-
-	for (int id = 0; id <= max_channel_id; ++id) {
-		if (id > 0) std::cout << ",";
-		std::cout << avg_values[id];
-	}
-	std::cout << std::endl;
-}
-
-
-void print_energy_for_nsec_exec(
-        smokyprobe::Probe_UART & probe,
-        unsigned int max_channel_id,
-        unsigned int nr_seconds)
-{
-	std::list<std::thread> tlist;
-
-	for (int id = 0; id <= max_channel_id; ++id) {
-		tlist.push_back(
-		std::thread([&] () {
-			probe.start_energy_sampling(id);
-			std::this_thread::sleep_for(
-			        std::chrono::seconds(nr_seconds));
-			float value = probe.stop_energy_sampling(id);
-			std::cout << "[" << id << "] energy: "
-			<< value << " J" << std::endl;
-		}));
-	}
-
-	for (auto & t : tlist)
-		t.join();
-}
 
 int main(int argc, char **argv)
 {
@@ -140,6 +76,8 @@ int main(int argc, char **argv)
 	unsigned int nr_samples = 10;
 	unsigned int nr_seconds = 5;
 	int up_to_channel = -1;
+
+	std::list<unsigned int> channels;
 
 	int option_index;
 	while ((opt = getopt_long(
@@ -190,45 +128,27 @@ int main(int argc, char **argv)
 
 	print_info = 1;
 
+	unsigned int id = up_to_channel;
+
 	// Channel availability
-	if (print_info) {
-		std::cout << "# Scanning up to channel: " << up_to_channel
-		          << std::endl;
-		for (unsigned int id = 0; id < up_to_channel; ++id) {
+	while (nr_samples--) {
+//		for (unsigned int id = 0; id < up_to_channel; ++id) {
 			auto ret = probe.check_channel(id);
 			if (ret == smokyprobe::DeviceStatus::OK) {
-				std::cout << "Channel: " << id
-				          << " = AVAILABLE" << std::endl;
-				std::cout << "info: " << probe.get_info(id)
-				          << std::endl;
-			} else {
+				std::cout << "[" << id << "] " 
+					<< probe.get_current_A(id) << " "
+					<< probe.get_voltage_V(id) << " "
+					<< probe.get_power_W(id) << std::endl;
+			} 
+/*
+			else {
 				std::cout << "Channel: " << id
 				          << " = NOT AVAILABLE "
 				          << (int) ret << std::endl;
 			}
+*/
 			std::this_thread::sleep_for(std::chrono::seconds(1));
-		}
-	}
-
-	// Values
-	if (print_voltage) {
-		print_avg_measure(
-		        probe, MeasureType::VOLTAGE, up_to_channel, nr_samples);
-	}
-
-	if (print_current) {
-		print_avg_measure(
-		        probe, MeasureType::CURRENT, up_to_channel, nr_samples);
-	}
-
-	if (print_power) {
-		print_avg_measure(
-		        probe, MeasureType::POWER, up_to_channel, nr_samples);
-	}
-
-	if (print_energy) {
-		print_energy_for_nsec_exec(probe, up_to_channel, nr_seconds);
-
+//		}
 	}
 
 	return 0;

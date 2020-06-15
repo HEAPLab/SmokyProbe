@@ -1,7 +1,7 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.0)
 
 ## Use the variable PROJECT_NAME for changing the target name
-set (PROJECT_NAME "smokytest" )
+set (PROJECT_NAME "smokytools" )
 
 set (LIBSMOKYPROBE_PATH /opt/smokyprobe/)
 message ("DEV PATH = " ${LIBSMOKYPROBE_PATH})
@@ -24,12 +24,7 @@ include_directories (${LIBSMOKYPROBE_PATH}/include)
 
 link_directories (${LIBSMOKYPROBE_PATH}/lib)
 
-## Define the executable
-add_executable (${PROJECT_NAME} ${SRCS})
+# Tools
+add_subdirectory(monitor)
 
-target_link_libraries (${PROJECT_NAME}
-	smokyprobe
-	log4cpp
-	pthread
-)
 
