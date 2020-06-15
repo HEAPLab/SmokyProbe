@@ -1,7 +1,7 @@
 
 cmake_minimum_required(VERSION 2.8)
 
-set (PROJECT_NAME smokyprobe-uart)
+set (PROJECT_NAME smokyprobe)
 
 project(${PROJECT_NAME})
 
@@ -24,11 +24,24 @@ add_library(${PROJECT_NAME} SHARED
 	${PROJECT_SRC}
 )
 
+set(HEADERS "${PROJECT_SOURCE_DIR}/include/smokyprobe.h;${PROJECT_SOURCE_DIR}/include/probe.h;${PROJECT_SOURCE_DIR}/include/probe_uart.h;${PROJECT_SOURCE_DIR}/include/config.h;${PROJECT_SOURCE_DIR}/include/types.h;${PROJECT_SOURCE_DIR}/include/probe_uart_safe.h;${PROJECT_SOURCE_DIR}/include/smart_semaphore.h")
+
+set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
+set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "${HEADERS}")
+
 target_link_libraries(${PROJECT_NAME}
 	log4cpp
 	pthread
 	rt
 )
 
+
+install(TARGETS ${PROJECT_NAME}
+	LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
+	PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_PREFIX}/include/smokyprobe
+)
+
 install(FILES logprobe.properties 
-	DESTINATION ${CMAKE_INSTALL_PREFIX}/etc/)
+	DESTINATION ${CMAKE_INSTALL_PREFIX}/etc/
+)
+

@@ -1,10 +1,13 @@
-cmake_minimum_required(VERSION 3.9)
+cmake_minimum_required(VERSION 3.5.1)
 
-project(smokyprobe VERSION 1.0 DESCRIPTION "SmokyProbe PC-side library")
+project(smokyprobe)
 
 ############################################################
 # Create a library
 ############################################################
+
+
+set (CMAKE_CXX_FLAGS "-std=c++11")
 
 #Generate the shared library from the library sources
 add_library(smokyprobe SHARED 
