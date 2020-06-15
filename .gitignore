@@ -1,2 +1,14 @@
 firmware/nucleo-g0/Debug
 firmware/nucleo-g0/Release
+build/
+build/Debug
+build/Release
+CMakeFiles/
+CMakeCache*
+cmake_install.cmake
+*.so*
+*.so.*
+*.swp
+*.swo
+*.bin
+
