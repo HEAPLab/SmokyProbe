@@ -375,7 +375,6 @@ void Test_UART_Echo()
 
 void Run_Interactive( )
 {
-  unsigned short int data_to_send;
   // Get the host-side request
   uint8_t request[MSG_REQUEST_LEN];
   status = HAL_UART_Receive(&hlpuart1, request, MSG_REQUEST_LEN, HAL_MAX_DELAY);
@@ -385,7 +384,8 @@ void Run_Interactive( )
 
   if (ch_id >= INA233_NR_SLAVES) {
 	reply_header[MSG_POS_REPLY_STATUS] = CHANNEL_NOT_VALID;
-	reply_header[MSG_POS_REPLY_DATA_LEN] = 0;
+	sprintf(reply_data, "%s", "Channel not valid");
+	reply_header[MSG_POS_REPLY_DATA_LEN] = strlen(reply_data);
 	reqcode = NOP;
   }
 
@@ -393,16 +393,12 @@ void Run_Interactive( )
   switch(reqcode) {
 
 	case NOP:
-		data_to_send = 0;
 		break;
 
 	case CHECK_DEVICE:
 		status = INA233_StatusCheck(&hi2c1, dev_addrs[ch_id], &fault);
 		if (status == HAL_OK) {
 		  sprintf(reply_data, "%d", fault);
-		  reply_header[MSG_POS_REPLY_STATUS] = REQUEST_OK;
-		  reply_header[MSG_POS_REPLY_DATA_LEN] = 1;
-		  data_to_send = 1;
 		}
 		break;
 
@@ -411,12 +407,13 @@ void Run_Interactive( )
 		if (status == HAL_OK) {
 		  sprintf(reply_data, "%s-%s-%s",
 				  dev_info.producer, dev_info.model, dev_info.rev);
+		  /*
 		  reply_header[MSG_POS_REPLY_STATUS] = REQUEST_OK;
 		  reply_header[MSG_POS_REPLY_DATA_LEN] =
 				  strlen(dev_info.producer) +
 				  strlen(dev_info.model) +
 				  strlen(dev_info.rev) + 2;
-		  data_to_send = 1;
+		   */
 		}
 		break;
 
@@ -424,9 +421,6 @@ void Run_Interactive( )
 		status = INA233_ReadInputCurrent(&hi2c1, dev_addrs[ch_id], &current);
 		if (status == HAL_OK) {
 		  sprintf(reply_data, "%2.6f", current);
-		  reply_header[MSG_POS_REPLY_STATUS] = REQUEST_OK;
-		  reply_header[MSG_POS_REPLY_DATA_LEN] = strlen(reply_data);
-		  data_to_send = 1;
 		}
 		break;
 
@@ -434,9 +428,6 @@ void Run_Interactive( )
 		status = INA233_ReadInputVoltage(&hi2c1, dev_addrs[ch_id], &voltage);
 		if (status == HAL_OK) {
 			sprintf(reply_data, "%2.3f", voltage);
-			reply_header[MSG_POS_REPLY_STATUS] = REQUEST_OK;
-			reply_header[MSG_POS_REPLY_DATA_LEN] = strlen(reply_data);
-			data_to_send = 1;
 		}
 		break;
 
@@ -444,9 +435,6 @@ void Run_Interactive( )
 		status = INA233_ReadShuntVoltage(&hi2c1, dev_addrs[ch_id], &vshunt);
 		if (status == HAL_OK) {
 			sprintf(reply_data, "%2.3f", vshunt);
-			reply_header[MSG_POS_REPLY_STATUS] = REQUEST_OK;
-			reply_header[MSG_POS_REPLY_DATA_LEN] = strlen(reply_data);
-			data_to_send = 1;
 		}
 		break;
 
@@ -454,32 +442,24 @@ void Run_Interactive( )
 	  status = INA233_ReadInputPower(&hi2c1, dev_addrs[ch_id], &power);
 	  if (status == HAL_OK) {
 		  sprintf(reply_data, "%4.6f", power);
-		  reply_header[MSG_POS_REPLY_STATUS] = REQUEST_OK;
-		  reply_header[MSG_POS_REPLY_DATA_LEN] = strlen(reply_data);
-		  data_to_send = 1;
 	  }
 	  break;
 
 	case GET_SAMPLES:
-	  status = INA233_ReadInputCurrent(&hi2c1, dev_addrs[ch_id], &current);
+	  status  = INA233_ReadInputCurrent(&hi2c1, dev_addrs[ch_id], &current);
 	  status |= INA233_ReadInputVoltage(&hi2c1, dev_addrs[ch_id], &voltage);
 	  status |= INA233_ReadShuntVoltage(&hi2c1, dev_addrs[ch_id], &vshunt);
 	  status |= INA233_ReadInputPower(&hi2c1, dev_addrs[ch_id], &power);
 	  if (status == HAL_OK) {
 		  sprintf(reply_data, "%2.6f %2.3f %2.4f %4.6f",
 				  current, voltage, power, vshunt);
-		  reply_header[MSG_POS_REPLY_STATUS] = REQUEST_OK;
-		  reply_header[MSG_POS_REPLY_DATA_LEN] = strlen(reply_data);
-		  data_to_send = 1;
 	  }
 	  break;
 
 	case START_ENERGY_SAMPLING:
 	  status = INA233_StartEnergySampling(&hi2c1, dev_addrs[ch_id], &htim2);
 	  if (status == HAL_OK) {
-		  reply_header[MSG_POS_REPLY_STATUS] = REQUEST_OK;
-		  reply_header[MSG_POS_REPLY_DATA_LEN] = 0;
-		  data_to_send = 0;
+		  sprintf(reply_data, "%s", "OK");
 	  }
 	  break;
 
@@ -487,37 +467,36 @@ void Run_Interactive( )
 	  status = INA233_StopEnergySampling(&hi2c1, dev_addrs[ch_id], &htim2, &energy);
 	  if (status == HAL_OK) {
 		  sprintf(reply_data, "%4.6f", energy);
-		  reply_header[MSG_POS_REPLY_STATUS] = REQUEST_OK;
-		  reply_header[MSG_POS_REPLY_DATA_LEN] = strlen(reply_data);
-		  data_to_send = 1;
 	  }
 	  break;
 
 	default:
 	  reply_header[MSG_POS_REPLY_STATUS] = REQUEST_NOT_VALID;
 	  reply_header[MSG_POS_REPLY_DATA_LEN] = 0;
-	  data_to_send = 0;
 	  break;
   }
 
-  // Send header
+  // Send reply header
   if (status != HAL_OK) {
 	reply_header[MSG_POS_REPLY_STATUS] = HW_ERROR;
-	reply_header[MSG_POS_REPLY_DATA_LEN] = 0;
-	data_to_send = 0;
+	sprintf(reply_data, "%s", "Hardware error on the device");
   }
-  reply_header[MSG_POS_CHANNEL_ID] = itoch(ch_id);
-  reply_header[MSG_POS_REPLY_CODE] = reqcode;
+
+  reply_header[MSG_POS_CHANNEL_ID]     = itoch(ch_id);
+  reply_header[MSG_POS_REPLY_CODE]     = reqcode;
+  reply_header[MSG_POS_REPLY_STATUS]   = REQUEST_OK;
+  reply_header[MSG_POS_REPLY_DATA_LEN] = strlen(reply_data);
   status = HAL_UART_Transmit(&hlpuart1,
 	  (uint8_t *) reply_header, MSG_REPLY_HEADER_LEN, HAL_MAX_DELAY);
 
-  // Send reply
-  if (data_to_send) {
+  // Send reply data
+  if (reply_header[MSG_POS_REPLY_DATA_LEN] > 0) {
 	status = HAL_UART_Transmit(&hlpuart1,
 		  (uint8_t *) reply_data, reply_header[MSG_POS_REPLY_DATA_LEN], HAL_MAX_DELAY);
+
+	// Reset
 	memset(reply_data, 0, MSG_REPLY_DATA_LEN_MAX);
 	reply_header[MSG_POS_REPLY_DATA_LEN] = 0;
-	data_to_send = 0;
   }
 }
 
