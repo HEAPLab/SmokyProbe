@@ -81,6 +81,14 @@ static uint16_t dev_addrs[] = {
 		INA233_SLAVE_5, INA233_SLAVE_6, INA233_SLAVE_7, INA233_SLAVE_8
 };
 
+// Request/reply
+float current, power, voltage, vshunt, energy;
+INA233_DeviceInfo dev_info;
+
+char reply_header[MSG_REPLY_HEADER_LEN];
+char reply_data[MSG_REPLY_DATA_LEN_MAX];
+INA233_FaultType fault;
+
 /* USER CODE END 0 */
 
 /**
@@ -367,25 +375,13 @@ void Test_UART_Echo()
 
 void Run_Interactive( )
 {
-  // Request/reply
-  float current, power, voltage, vshunt, energy;
-  INA233_DeviceInfo dev_info;
-
-  uint8_t request[MSG_REQUEST_LEN];
-  uint8_t ch_id = 0;
-  uint8_t host_data = 255;
-  HostRequestCode reqcode;
-
-  uint8_t reply_header[MSG_REPLY_HEADER_LEN];
-  char reply_data[MSG_REPLY_DATA_LEN_MAX];
   unsigned short int data_to_send;
-  INA233_FaultType fault;
-
   // Get the host-side request
+  uint8_t request[MSG_REQUEST_LEN];
   status = HAL_UART_Receive(&hlpuart1, request, MSG_REQUEST_LEN, HAL_MAX_DELAY);
-  ch_id     = chtoi(request[MSG_POS_CHANNEL_ID]);
-  reqcode   = (HostRequestCode) request[MSG_POS_REQUEST_CODE];
-  host_data = request[MSG_POS_DATA];
+  uint8_t ch_id           = chtoi(request[MSG_POS_CHANNEL_ID]);
+  HostRequestCode reqcode = request[MSG_POS_REQUEST_CODE];
+  uint8_t host_data       = request[MSG_POS_DATA];
 
   if (ch_id >= INA233_NR_SLAVES) {
 	reply_header[MSG_POS_REPLY_STATUS] = CHANNEL_NOT_VALID;
@@ -527,8 +523,6 @@ void Run_Interactive( )
 
 
 void Run_Batch() {
-	float current, power, voltage, vshunt;
-	uint8_t reply_data[MSG_REPLY_DATA_LEN_MAX];
 
 	uint8_t ch_id = 0;
 	for (; ch_id < 4; ++ch_id) {
