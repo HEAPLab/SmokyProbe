@@ -144,11 +144,19 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 
-	//Test_Time();
-	//Test_UART_Echo();
+#ifdef RUN_MODE_INTERACTIVE
 	Run_Interactive();
-	//Run_Batch();
-	//HAL_Delay(10);
+#endif
+
+#ifdef RUN_MODE_BATCH
+	Run_Batch();
+	HAL_Delay(1);
+#endif
+
+#ifdef RUN_MODE_TESTS
+	Test_Time();
+	Test_UART_Echo();
+#endif
   }
   /* USER CODE END 3 */
 }
