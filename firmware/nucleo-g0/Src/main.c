@@ -513,12 +513,12 @@ void Run_Batch() {
 
 	uint8_t ch_id = 0;
 	for (; ch_id < 4; ++ch_id) {
-	  status = INA233_ReadInputCurrent(&hi2c1, dev_addrs[ch_id], &current);
+	  status  = INA233_ReadInputCurrent(&hi2c1, dev_addrs[ch_id], &current);
 	  status |= INA233_ReadInputVoltage(&hi2c1, dev_addrs[ch_id], &voltage);
 	  status |= INA233_ReadShuntVoltage(&hi2c1, dev_addrs[ch_id], &vshunt);
 	  status |= INA233_ReadInputPower(&hi2c1, dev_addrs[ch_id], &power);
 	  if (status == HAL_OK) {
-		  sprintf(reply_data, "[%d] %2.6f %2.3f %2.4f %4.6f \n\r",
+		  sprintf(reply_data, "[%d] %2.6f %2.6f %2.6f %2.6f \n\r",
 				  ch_id, current, voltage, power, vshunt);
 		  size_t len = strlen((char *)reply_data);
 		  status = HAL_UART_Transmit(&hlpuart1,
