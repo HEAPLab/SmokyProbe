@@ -2,6 +2,8 @@
 #ifndef __SMOKYPROBE_UART__
 #define __SMOKYPROBE_UART__
 
+#include <array>
+
 #include <log4cpp/Category.hh>
 #include <log4cpp/PropertyConfigurator.hh>
 
@@ -13,6 +15,10 @@
 
 namespace smokyprobe
 {
+
+using request_pkt = std::array<uint8_t, MSG_REQUEST_LEN>;
+using reply_h_pkt = std::array<uint8_t, MSG_REPLY_DATA_LEN_MAX>;
+using reply_d_pkt = std::array<uint8_t, MSG_REPLY_HEADER_LEN>;
 
 /**
  * @class Probe_UART
@@ -128,19 +134,25 @@ public:
 	 */
 	void test_echo(std::string const & str) override;
 
+	/**
+	 * @brief Get the entire line of data from the device
+	 * @return a string object with the content
+	 */
+	std::string get_line();
+
 
 private:
 
-	/// Logger
+	// Logger
 	log4cpp::Category & logger;
 
-	///	Serial port device descriptor
+	// Serial port device descriptor
 	int dev_fd;
 
-	/// Serial port opening status
+	// Serial port opening status
 	bool open_status = false;
 
-	/// Serial port configuration options
+	// Serial port configuration options
 	struct termios dev_options;
 
 protected:
@@ -157,43 +169,51 @@ protected:
 	 * @param data the optional data to append to the request
 	 * @param reply_header the header of the reply message
 	 * @return SUCCESS for successful termination.
-	 * 	WRITE_ERROR if an error occurred during request transmission.
-	 *  READ_ERROR if an error occurred during header reply reception.
-	 * 	UNKNOWN_ERROR if an unknown return code has been received.
+	 *    WRITE_ERROR if an error occurred during request transmission.
+	 *    READ_ERROR if an error occurred during header reply reception.
+	 *    UNKNOWN_ERROR if an unknown return code has been received.
 	 */
-	ExitCode send_request(
+	void enqueue_request(
 	    uint8_t channel_id,
 	    RequestType reqcode,
-	    uint8_t * data,
-	    uint8_t * reply_header);
+	    uint8_t * data);
 
 	/**
-	 * @brief Receive the actual data as reply of a request
-	 * @param reply_header The reply header previously received
-	 * @param reply_data The actual reply data
+	 * @brief Send a request to the device
+	 */
+	ExitCode send_to_device(request_pkt & request);
+
+	/**
+	 * @brief Receive the actual data from the device as reply of a request
+	 * @param reply_header The reply header packet
+	 * @param reply_data The reply data packet
 	 * @return SUCCESS for successful termination.
 	 */
-	ExitCode recv_data(uint8_t * reply_header, uint8_t * reply_data);
+	ExitCode recv_from_device(
+	    reply_h_pkt & reply_header,
+	    reply_d_pkt & reply_data);
 
 	/**
 	 * @brief Send a request and get the reply in string form
 	 * @param channel_id the channel of the probing device
-	 * @param reqtype the request type
+	 * @param reqcode the request type
 	 * @return a string object containing the reply
 	 */
 	std::string send_request_and_get_data(
 	    uint8_t channel_id,
-	    RequestType reqtype);
+	    RequestType reqcode,
+	    uint8_t * data = nullptr);
 
 	/**
 	 * @brief Send a request and get the reply as floating point value
 	 * @param channel_id the channel of the probing device
-	 * @param reqtype the request type
+	 * @param reqcode the request type
 	 * @return a floating point value (measure)
 	 */
 	float send_request_and_get_data_float(
 	    uint8_t channel_id,
-	    RequestType reqtype);
+	    RequestType reqcode,
+	    uint8_t * data = nullptr);
 
 	/**
 	 * @brief Print the content of a data packet
@@ -202,7 +222,7 @@ protected:
 	 * @param size the size of the data packet
 	 */
 	void print_packet_content(
-	    const char * msg,
+	    std::string const & msg,
 	    uint8_t * data,
 	    size_t size);
 

@@ -20,17 +20,16 @@ namespace smokyprobe
 
 
 void Probe_UART::print_packet_content(
-    const char * msg,
+    std::string const & msg,
     uint8_t * data,
     size_t size)
 {
 	std::stringstream data_stream;
-	for (int i = 0; i < size; ++i) {
-		data_stream << " " << static_cast<int>(data[i])
-		            << " ('" << data[i] << "')";
+	for (size_t i = 0; i < size; ++i) {
+		data_stream << "[" << data[i] << "]";
 	}
 	std::string ds(data_stream.str());
-	logger.debug("%s: %s", msg, ds.c_str());
+	logger.info("%s: %s", msg.c_str(), ds.c_str());
 }
 
 
@@ -74,11 +73,13 @@ Probe_UART::Probe_UART(std::string dev_path):
 		nb += read(this->dev_fd, buff, 3);
 	}
 	logger.debug("found %d pending bytes... ", nb);
+	logger.debug("Probe_UART ready");
 }
 
 
 Probe_UART::~Probe_UART()
 {
+	// Close file descriptors
 	fsync(dev_fd);
 	close(dev_fd);
 	logger.shutdown();
@@ -89,9 +90,17 @@ void Probe_UART::test_echo(std::string const & str)
 {
 	char echo_byte;
 	for (std::string::const_iterator it=str.begin(); it!=str.end(); ++it) {
-		write(dev_fd, (char *) &(*it), 1);
+		ssize_t nb = write(dev_fd, (char *) &(*it), 1);
+		if (nb < 0) {
+			perror("test_echo");
+			return;
+		}
 		std::this_thread::sleep_for(std::chrono::milliseconds(10));
-		read(dev_fd, &echo_byte, 1);
+		nb = read(dev_fd, &echo_byte, 1);
+		if (nb < 0) {
+			perror("test_echo");
+			return;
+		}
 		logger.debug("test_echo: %d [%c]", echo_byte, echo_byte);
 	}
 }
@@ -112,97 +121,115 @@ void Probe_UART::config_port()
 }
 
 
-ExitCode Probe_UART::send_request(
-    uint8_t channel_id,
-    RequestType reqcode,
-    uint8_t * data,
-    uint8_t * reply_header)
+/*** Data transmission functions ***/
+
+
+ExitCode Probe_UART::send_to_device(request_pkt & request)
 {
+	// Check device status
 	if (!open_status) {
-		logger.error("send_request: probe device not open!");
+		logger.error("send_to_device: probe device not open!");
 		return ExitCode::DEVICE_NOT_OPEN;
 	}
 
-	// Header
-	uint8_t request[MSG_REQUEST_LEN];
-	request[MSG_POS_CHANNEL_ID]   = itoch(channel_id);
-	request[MSG_POS_REQUEST_CODE] = reqcode;
-	request[MSG_POS_DATA]         = INCLUDE_NO_DATA;
-
-	if (data != nullptr)
-		request[MSG_POS_DATA] = *data;
-	print_packet_content("send_request: request = ", request, MSG_REQUEST_LEN);
-
-	// Send request
-	ssize_t nb = write(dev_fd, request, sizeof(request));
+	ssize_t nb = write(dev_fd, request.data(), sizeof(request.data()));
 	if (nb < 0) {
-		perror("send_request: error");
+		perror("send_to_device: error");
 		return ExitCode::WRITE_ERROR;
 	}
-	std::this_thread::sleep_for(std::chrono::milliseconds(50));
 
-	// Receive reply header
-	nb = 0;
-	while (nb < MSG_REPLY_HEADER_LEN) {
-		nb = read(dev_fd, reply_header, MSG_REPLY_HEADER_LEN);
-		if (nb < 0) {
-			perror("send_request: error");
-			return ExitCode::READ_ERROR;
-		}
-		else {
-			logger.debug("send_request: header length  = %d", nb);
-		}
-	}
-	print_packet_content("send_request: reply_header = ",
-	                     reply_header,
-	                     MSG_REPLY_HEADER_LEN);
-
-	if (reply_header[MSG_POS_REPLY_STATUS] != 0) {
-		logger.error("send_request: error = %d",
-		             reply_header[MSG_POS_REPLY_STATUS]);
-		return ExitCode::UNKNOWN_ERROR;
-	}
+	std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
 	return ExitCode::SUCCESS;
 }
 
 
-ExitCode Probe_UART::recv_data(uint8_t * reply_header, uint8_t * reply_data)
+ExitCode Probe_UART::recv_from_device(
+	reply_h_pkt & reply_header,
+	reply_d_pkt & reply_data)
 {
-	// Reply data
-	memset(reply_data, 0, MSG_REPLY_DATA_LEN_MAX);
-	ssize_t nb = read(dev_fd, reply_data, reply_header[MSG_POS_REPLY_DATA_LEN]);
-	logger.debug("recv_data: len = %d/%d",
+	// Receive reply header
+	ssize_t nb = read(dev_fd, reply_header.data(), MSG_REPLY_HEADER_LEN);
+	if (nb < 0) {
+		perror("recv_from_device:" );
+		return ExitCode::READ_ERROR;
+	}
+
+	logger.debug("recv_from_device: header length  = %d", nb);
+	print_packet_content("recv_from_device: reply_header = ",
+	                     reply_header.data(),
+	                     MSG_REPLY_HEADER_LEN);
+
+	if (reply_header[MSG_POS_REPLY_STATUS] != REPLY_STATUS_OK) {
+		logger.error("recv_from_device: error = %d",
+		             reply_header[MSG_POS_REPLY_STATUS]);
+		return ExitCode::READ_ERROR;
+	}
+
+	// Receive reply data
+	nb = read(dev_fd, reply_data.data(), reply_header[MSG_POS_REPLY_DATA_LEN]);
+	if (nb < 0) {
+		perror("recv_from_device:" );
+		return ExitCode::UNKNOWN_ERROR;
+	}
+
+	logger.debug("recv_from_device: len = %d / %d",
 	             nb, reply_header[MSG_POS_REPLY_DATA_LEN]);
-	print_packet_content("recv_data: reply_data = ",
-	                     reply_data,
+	print_packet_content("recv_from_device: reply_data = ",
+	                     reply_data.data(),
 	                     reply_header[MSG_POS_REPLY_DATA_LEN]);
-	return ExitCode::SUCCESS;;
+
+	return ExitCode::SUCCESS;
 }
 
 
 std::string Probe_UART::send_request_and_get_data(
-    uint8_t channel_id, RequestType reqtype)
+    uint8_t channel_id,
+    RequestType reqcode,
+    uint8_t * data)
 {
-	uint8_t reply_header[MSG_REPLY_HEADER_LEN];
-	auto ret = send_request(channel_id, reqtype, nullptr, reply_header);
-	if (ret != ExitCode::SUCCESS) {
-		return std::string("");
-	}
+	// Create and send the request
+	request_pkt request;
+	request[MSG_POS_CHANNEL_ID]   = itoch(channel_id);
+	request[MSG_POS_REQUEST_CODE] = reqcode;
+	request[MSG_POS_DATA]         = INCLUDE_NO_DATA;
+	if (data != nullptr)
+		request[MSG_POS_DATA] = *data;
+	print_packet_content("send_request_and_get_data: request = ", request.data(), MSG_REQUEST_LEN);
+	send_to_device(request);
 
-	uint8_t reply_data[MSG_REPLY_DATA_LEN_MAX];
-	recv_data(reply_header, reply_data);
+	reply_h_pkt reply_header;
+	reply_d_pkt reply_data;
+	recv_from_device(reply_header, reply_data);
 
-	return std::string((char *)reply_data);
+	return std::string((char *) reply_data.data());
 }
 
 
 float Probe_UART::send_request_and_get_data_float(
-    uint8_t channel_id, RequestType reqtype)
+    uint8_t channel_id,
+    RequestType reqcode,
+    uint8_t * data)
 {
-	std::string dev_data(send_request_and_get_data(channel_id, reqtype));
+	std::string dev_data(send_request_and_get_data(channel_id, reqcode, data));
 	return atof(dev_data.c_str());
 }
+
+
+/*** Functionalities ***/
+
+
+std::string Probe_UART::get_line()
+{
+	char buffer[MSG_REPLY_DATA_LEN_MAX];
+	int nb = read(dev_fd, buffer, MSG_REPLY_DATA_LEN_MAX);
+	if (nb < 0) {
+		perror("get_line");
+		return "";
+	}
+	return std::string(buffer);
+}
+
 
 
 std::string Probe_UART::get_info(uint8_t channel_id)
@@ -267,18 +294,9 @@ std::string Probe_UART::get_all(uint8_t channel_id)
 
 int Probe_UART::start_energy_sampling(uint8_t channel_id)
 {
-	uint8_t reply_header[MSG_REPLY_HEADER_LEN];
-	auto ret = send_request(
-	               channel_id,
-	               START_ENERGY_SAMPLING,
-	               nullptr,
-	               reply_header);
-	if (ret != ExitCode::SUCCESS) {
-		return 0.0;
-	}
-
+	send_request_and_get_data(channel_id, START_ENERGY_SAMPLING);
 	logger.debug("[%d] start energy sampling...", channel_id);
-	return reply_header[MSG_POS_REPLY_STATUS];
+	return 0;
 }
 
 
@@ -290,5 +308,8 @@ float Probe_UART::stop_energy_sampling(uint8_t channel_id)
 	logger.debug("[%d] energy: %f J", channel_id, value);
 	return value;
 }
+
+
+/***/
 
 } // namespace smokyprobe
