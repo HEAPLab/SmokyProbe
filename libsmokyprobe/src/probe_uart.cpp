@@ -46,7 +46,7 @@ Probe_UART::Probe_UART(std::string dev_path):
 
 	// Serial device
 	this->dev_fd = open(dev_path.c_str(),
-	                    O_RDWR | O_NOCTTY | O_SYNC | O_RSYNC | O_DSYNC);
+	                    O_RDWR | O_SYNC | O_RSYNC | O_DSYNC);
 	if (this->dev_fd > 0) {
 		config_port();
 		open_status = true;
@@ -116,7 +116,8 @@ void Probe_UART::config_port()
 	dev_options.c_cflag &= ~CSTOPB;
 	dev_options.c_cflag &= ~CSIZE;
 	dev_options.c_cflag |= CS8;
-	dev_options.c_cflag |= FLUSHO;
+	dev_options.c_cflag |= ONLRET;
+	dev_options.c_cflag |= IGNCR;
 	tcsetattr(this->dev_fd, TCSANOW, &this->dev_options);
 	logger.debug("config_port: serial port configured");
 }
