@@ -29,7 +29,7 @@ void Probe_UART::print_packet_content(
 		data_stream << "[" << data[i] << "]";
 	}
 	std::string ds(data_stream.str());
-	logger.info("%s: %s", msg.c_str(), ds.c_str());
+	logger.debug("%s: %s", msg.c_str(), ds.c_str());
 }
 
 
@@ -73,7 +73,7 @@ Probe_UART::Probe_UART(std::string dev_path):
 		nb += read(this->dev_fd, buff, 3);
 	}
 	logger.debug("found %d pending bytes... ", nb);
-	logger.debug("Probe_UART ready");
+	logger.info("Probe_UART ready");
 }
 
 
@@ -173,7 +173,7 @@ ExitCode Probe_UART::recv_from_device(
 		return ExitCode::UNKNOWN_ERROR;
 	}
 
-	logger.debug("recv_from_device: len = %d / %d",
+	logger.debug("recv_from_device: len = %d/%d",
 	             nb, reply_header[MSG_POS_REPLY_DATA_LEN]);
 	print_packet_content("recv_from_device: reply_data = ",
 	                     reply_data.data(),
@@ -265,7 +265,7 @@ DeviceStatus Probe_UART::check_channel(uint8_t channel_id)
 float Probe_UART::get_current_A(uint8_t channel_id)
 {
 	float value = send_request_and_get_data_float(channel_id, GET_CURRENT);
-	logger.debug("[%d] current: %f A", channel_id, value);
+	logger.info("[%d] current: %f A", channel_id, value);
 	return value;
 }
 
@@ -273,7 +273,7 @@ float Probe_UART::get_current_A(uint8_t channel_id)
 float Probe_UART::get_voltage_V(uint8_t channel_id)
 {
 	float value = send_request_and_get_data_float(channel_id, GET_VOLTAGE);
-	logger.debug("[%d] voltage: %f V", channel_id, value);
+	logger.info("[%d] voltage: %f V", channel_id, value);
 	return value;
 }
 
@@ -281,7 +281,7 @@ float Probe_UART::get_voltage_V(uint8_t channel_id)
 float Probe_UART::get_power_W(uint8_t channel_id)
 {
 	float value = send_request_and_get_data_float(channel_id, GET_POWER);
-	logger.debug("[%d] power: %f W", channel_id, value);
+	logger.info("[%d] power: %f W", channel_id, value);
 	return value;
 }
 
@@ -295,7 +295,7 @@ std::string Probe_UART::get_all(uint8_t channel_id)
 int Probe_UART::start_energy_sampling(uint8_t channel_id)
 {
 	send_request_and_get_data(channel_id, START_ENERGY_SAMPLING);
-	logger.debug("[%d] start energy sampling...", channel_id);
+	logger.info("[%d] start energy sampling...", channel_id);
 	return 0;
 }
 
@@ -305,7 +305,7 @@ float Probe_UART::stop_energy_sampling(uint8_t channel_id)
 	float value = send_request_and_get_data_float(
 	                  channel_id,
 	                  STOP_ENERGY_SAMPLING);
-	logger.debug("[%d] energy: %f J", channel_id, value);
+	logger.info("[%d] energy: %f J", channel_id, value);
 	return value;
 }
 
