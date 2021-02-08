@@ -53,6 +53,7 @@ Probe_UART::Probe_UART(std::string dev_path):
 	} else {
 		perror("Probe_UART opening");
 		logger.error("error while opening UART device");
+		return;
 	}
 
 	// Check pending bytes....
