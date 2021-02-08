@@ -1,9 +1,31 @@
-TODO
 
+# SmokyProbe
+
+Firmware
+========
+
+Project related to the firmware for the STM32-NUCLEO G071RB board, for sampling
+the SmokyProbe on-board sensors via I2C.
+
+
+SmokyProbe library (libsmokyprobe)
+==================================
+
+Host-side library for communicating with the STM32-NUCLEO board via serial interface.
+
+
+Tools
+=====
+
+Host-side programs implementing specific reading functionalities.
 
 Troubleshooting
----------------
+===============
 
-- If you have problems in tty communication with the device try the following stty settings:
+- If you have problems in tty communication with the device try the following
+  stty settings:
 
-stty -F /dev/ttyACM0 -hupcl brkint ignpar -icrnl -ixon -opost -onlcr -isig -icanon -iexten -echo -echoe -echok -echoctl -echoke
+	stty -F /dev/ttyACM0 -hupcl brkint ignpar -icrnl -ixon -opost -onlcr
+	-isig -icanon -iexten -echo -echoe -echok -echoctl -echoke
+
+
