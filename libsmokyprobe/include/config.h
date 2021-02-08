@@ -32,6 +32,6 @@
 #define MSG_POS_REPLY_STATUS    2
 #define MSG_POS_REPLY_DATA_LEN  3
 
-
+#define REPLY_STATUS_OK         100
 
 #endif // __SMOKYPROBE_CONFIG__

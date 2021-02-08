@@ -68,7 +68,7 @@ typedef char HostRequestCode;
 #define chtoi(x) x - 48
 
 typedef enum {
-	REQUEST_OK = 0,
+	REQUEST_OK = 100,
 	CHANNEL_NOT_VALID,
 	REQUEST_NOT_VALID,
 	HW_ERROR

@@ -103,7 +103,7 @@ typedef struct {
 
 
 typedef enum {
-	NONE = 0,
+	NONE     = '0',
 	FAULT_CML,     // Communication
 	FAULT_MFL,     // Manufacturing
 } INA233_FaultType;
