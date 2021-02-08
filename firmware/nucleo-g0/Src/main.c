@@ -145,6 +145,7 @@ int main(void)
     /* USER CODE BEGIN 3 */
 
 #ifdef RUN_MODE_INTERACTIVE
+	MX_LPUART1_UART_Init();
 	Run_Interactive();
 #endif
 
