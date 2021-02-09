@@ -5,14 +5,6 @@
 namespace smokyprobe
 {
 
-enum class ExitCode
-{
-    SUCCESS,
-    DEVICE_NOT_OPEN,
-    READ_ERROR,
-    WRITE_ERROR,
-    UNKNOWN_ERROR
-};
 
 /*
 enum RequestType {
@@ -46,6 +38,16 @@ typedef char RequestType;
 #define chtoi(x) x - 48
 
 #define INCLUDE_NO_DATA        '-'
+
+
+enum class ExitCode
+{
+    SUCCESS,
+    DEVICE_NOT_OPEN,
+    READ_ERROR,
+    WRITE_ERROR,
+    UNKNOWN_ERROR
+};
 
 enum class DeviceStatus
 {
