@@ -195,6 +195,16 @@ HAL_StatusTypeDef INA233_StatusCheck(
 		*fault = OK;
 
 	return status;
+}
+
+HAL_StatusTypeDef INA233_ClearFaults(I2C_HandleTypeDef * i2c_handle, uint16_t slave_addr)
+{
+	uint8_t cmd = INA233_CLEAR_FAULTS;
+	HAL_StatusTypeDef status = HAL_I2C_Master_Transmit(i2c_handle, slave_addr, &cmd, 1, CONF_I2C_BUS_TIMEOUT);
+	if (status == HAL_ERROR) {
+		  asm("nop");
+		  return status;
+	}
 
 	return status;
 }
