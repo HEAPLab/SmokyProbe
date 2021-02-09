@@ -41,10 +41,10 @@ Probe_UART::Probe_UART(std::string dev_path):
 	try {
 		log4cpp::PropertyConfigurator::configure(std::string(LOGFILE));
 	} catch(log4cpp::ConfigureFailure & ex) {
-		std::cout << "probe_uart: missing log4cpp file!" << std::endl;
+		std::cout << "Probe_UART: missing log4cpp file!" << std::endl;
 	}
 
-	// Serial device
+	// Serial device opening and configuration
 	this->dev_fd = open(dev_path.c_str(),
 	                    O_RDWR | O_SYNC | O_RSYNC | O_DSYNC);
 	if (this->dev_fd > 0) {
@@ -52,35 +52,25 @@ Probe_UART::Probe_UART(std::string dev_path):
 		open_status = true;
 	} else {
 		perror("Probe_UART opening");
-		logger.error("error while opening UART device");
+		logger.error("Probe_UART: error while opening UART device");
 		return;
 	}
 
-	// Check pending bytes....
-	const struct timespec tmo_p = {
-		.tv_sec = 2,
-		.tv_nsec = 0
-	};
-
-	struct pollfd fds[1];
-	fds[0].fd = this->dev_fd;
-	fds[0].events  = 0;
-	fds[0].revents = 0;
-
-	logger.debug("checking pending bytes... ");
-	int nb = 0;
-	unsigned char buff[3];
-	while ( ppoll(fds, 1, &tmo_p, NULL) > 0 ) {
-		nb += read(this->dev_fd, buff, 3);
+	// Serial device input buffer flushing
+	logger.debug("Probe_UART: flushing input buffer... ");
+	if (tcflush(this->dev_fd, TCIFLUSH) != 0) {
+		logger.error("Probe_UART: serial input buffer error");
+		perror("Probe_UART serial");
+		open_status = false;
 	}
-	logger.debug("found %d pending bytes... ", nb);
 	logger.info("Probe_UART ready");
 }
 
 
 Probe_UART::~Probe_UART()
 {
-	// Close file descriptors
+	logger.debug("Probe_UART: terminating... ");
+	tcflush(this->dev_fd, TCIOFLUSH);
 	fsync(dev_fd);
 	close(dev_fd);
 	logger.shutdown();
