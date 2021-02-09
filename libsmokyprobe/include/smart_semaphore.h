@@ -32,6 +32,7 @@ public:
 	smart_semaphore & operator=(smart_semaphore && o ) {
 		__sem = o.__sem;
 		o.__sem = nullptr;
+		return *this;
 	}
 
 
