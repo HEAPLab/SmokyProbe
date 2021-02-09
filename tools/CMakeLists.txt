@@ -13,12 +13,15 @@ find_library(LIBSMOKYPROBE smokyprobe
 	HINTS ${LIBSMOKYPROBE_PATH}
 )
 
-include_directories (${LIBSMOKYPROBE_PATH}/include)
+include_directories (
+	${LIBSMOKYPROBE_PATH}/include
+	../libsmokyprobe/include
+	../utils
+)
 
 link_directories (${LIBSMOKYPROBE_PATH}/lib)
 
 # Tools
 add_subdirectory(energy)
 add_subdirectory(readivp)
-
 

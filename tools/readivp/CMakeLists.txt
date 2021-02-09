@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.0)
 
-set (TARGET_NAME "smokytools-energy" )
+set (TARGET_NAME "smokytools-readivp" )
 
 message (STATUS ${PROJECT_NAME}": " ${TARGET_NAME})
 

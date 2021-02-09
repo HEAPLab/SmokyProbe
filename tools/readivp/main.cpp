@@ -7,6 +7,9 @@
 #include <iostream>
 #include <list>
 #include <string>
+#include <vector>
+#include <thread>
+
 
 #include <probe_uart.h>
 #include <probe_uart_safe.h>
@@ -23,23 +26,20 @@ void print_help(char * execname)
 	std::cout << "Usage: # " << execname << std::endl
 	          << "    [-d] /path/to/serial/device " << std::endl
 	          << "    [-c] The channel list with a comma separator (e.g, 0,1,2,3) " << std::endl
-	          << "    [-s] Start the energy consumption sampling" << std::endl
-	          << "    [-f] Stop the energy consumption sampling and print the value " << std::endl
+	          << "    [-n] number of samples to return" << std::endl
+	          << "    [-t] period [milliseconds] between samplings" << std::endl
 	          << std::endl;
 }
-
 
 int main(int argc, char **argv)
 {
 	int opt;
 	char file_tty[20];
 	unsigned int nr_samples = 10;
-	unsigned int nr_seconds = 5;
-	bool stop;
-
+	unsigned int period_ms  = 1000;
 	std::list<unsigned int> channels;
 
-	while ((opt = getopt(argc, argv, "hd:c:sf")) != -1) {
+	while ((opt = getopt(argc, argv, "hd:c:n:t:")) != -1) {
 		switch (opt) {
 		case 'h':
 			print_help(argv[0]);
@@ -50,19 +50,17 @@ int main(int argc, char **argv)
 		case 'c':
 			channels = get_channels_from_str(optarg);
 			break;
-		case 's':
-			stop = false;
+		case 'n':
+			nr_samples = atoi(optarg);
 			break;
-		case 'f':
-			stop = true;
+		case 't':
+			period_ms = atoi(optarg);
 			break;
-
 		default:
 			print_help(argv[0]);
 			return 1;
 		}
 	}
-
 
 	std::cout << "Opening the SmokyProbe device..." << std::endl;
 	smokyprobe::Probe_UART probe(file_tty);
@@ -79,16 +77,17 @@ int main(int argc, char **argv)
 			channels.push_back(ch_id);
 	}
 
-	// Start or stop energy sampling from each channel from the list
-	for (auto & ch_id: channels) {
-		if (!stop) {
-			probe.start_energy_sampling(ch_id);
-			std::cout << "[" << ch_id << "] Energy sampling started..." << std::endl;
+	std::cout << "Channel	Current	Voltage	Power " << std::endl;
+	while (nr_samples--) {
+		for (auto & ch_id: channels) {
+			std::cout << "[" << ch_id << "]"
+				<< " " << probe.get_current_A(ch_id)
+				<< " " << probe.get_voltage_V(ch_id)
+				<< " " << probe.get_power_W(ch_id)
+				<< std::endl;
 		}
-		else {
-			auto e_val = probe.stop_energy_sampling(ch_id);
-			std::cout << "[" << ch_id << "] Energy sampling stopped: " << e_val << " J" << std::endl;
-		}
+
+		std::this_thread::sleep_for(std::chrono::milliseconds(period_ms));
 	}
 
 	return 0;

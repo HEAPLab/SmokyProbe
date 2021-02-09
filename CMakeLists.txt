@@ -6,4 +6,5 @@ set (PROJECT_NAME "smokyprobe")
 project (${PROJECT_NAME})
 
 add_subdirectory(libsmokyprobe)
+add_subdirectory(utils)
 add_subdirectory(tools)
