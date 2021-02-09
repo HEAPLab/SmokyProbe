@@ -174,7 +174,7 @@ HAL_StatusTypeDef INA233_StatusCheck(
 	HAL_StatusTypeDef status = HAL_OK;
 
 	uint8_t cmd = INA233_STATUS_BYTE;
-	uint8_t recv_byte;
+	uint8_t recv_byte = 0;
 
 	// Status byte
 	status = HAL_I2C_Master_Transmit(i2c_handle,
@@ -186,10 +186,15 @@ HAL_StatusTypeDef INA233_StatusCheck(
 		  return status;
 	}
 
-	if (recv_byte == (1 << 1))
+	// NOTE: Not sure about how much critical it really is
+	if (recv_byte == (1 << 1)) {
 		*fault = FAULT_CML;
+		INA233_ClearFaults(i2c_handle, slave_addr);
+	}
+	else
+		*fault = OK;
 
-	*fault = NONE;
+	return status;
 
 	return status;
 }

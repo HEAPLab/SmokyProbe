@@ -407,7 +407,7 @@ void Run_Interactive( )
 	case CHECK_DEVICE:
 		status = INA233_StatusCheck(&hi2c1, dev_addrs[ch_id], &fault);
 		if (status == HAL_OK) {
-		  sprintf(reply_data, "%d", fault);
+			sprintf(reply_data, "%c", fault);
 		}
 		break;
 
