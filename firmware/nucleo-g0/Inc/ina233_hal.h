@@ -25,10 +25,8 @@
  extern "C" {
 #endif
 
-
 #include "stm32g0xx_hal.h"
 #include "ina233_hal_conf.h"
-
 
 #define INA233_CURRENT_LSB  (CONF_MAX_EXPECTED_CURRENT / (1 << 15))
 #define INA233_CAL          (uint16_t)(0.00512 / (INA233_CURRENT_LSB * CONF_SHUNT_RESISTOR_VALUE)) // = 8258

@@ -510,8 +510,8 @@ void Run_Interactive( )
 }
 
 
-void Run_Batch() {
-
+void Run_Batch()
+{
 	uint8_t ch_id = 0;
 	for (; ch_id < 4; ++ch_id) {
 	  status  = INA233_ReadInputCurrent(&hi2c1, dev_addrs[ch_id], &current);
