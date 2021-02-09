@@ -18,7 +18,6 @@ include_directories (${LIBSMOKYPROBE_PATH}/include)
 link_directories (${LIBSMOKYPROBE_PATH}/lib)
 
 # Tools
-add_subdirectory(monitor)
 add_subdirectory(energy)
 add_subdirectory(readivp)
 
