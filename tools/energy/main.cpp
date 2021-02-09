@@ -21,8 +21,8 @@ void print_help(char * execname)
 	std::cout << "Usage: # " << execname << std::endl
 	          << "    [-d] /path/to/serial/device " << std::endl
 	          << "    [-c] The channel list with a comma separator (e.g, 0,1,2,3) " << std::endl
-	          << "    [-b] Start the energy consumption sampling" << std::endl
-	          << "    [-e] Stop the energy consumption sampling and print the value " << std::endl
+	          << "    [-s] Start the energy consumption sampling" << std::endl
+	          << "    [-f] Stop the energy consumption sampling and print the value " << std::endl
 	          << std::endl;
 }
 
@@ -57,7 +57,7 @@ int main(int argc, char **argv)
 
 	std::list<unsigned int> channels;
 
-	while ((opt = getopt(argc, argv, "hd:c:be")) != -1) {
+	while ((opt = getopt(argc, argv, "hd:c:sf")) != -1) {
 		switch (opt) {
 		case 'h':
 			print_help(argv[0]);
@@ -69,10 +69,10 @@ int main(int argc, char **argv)
 			//up_to_channel = atoi(optarg);
 			channels = get_channels_from_str(optarg);
 			break;
-		case 'b':
+		case 's':
 			stop = false;
 			break;
-		case 'e':
+		case 'f':
 			stop = true;
 			break;
 
