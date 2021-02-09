@@ -52,7 +52,6 @@ int main(int argc, char **argv)
 	char file_tty[20];
 	unsigned int nr_samples = 10;
 	unsigned int nr_seconds = 5;
-	int up_to_channel = -1;
 	bool stop;
 
 	std::list<unsigned int> channels;
@@ -66,7 +65,6 @@ int main(int argc, char **argv)
 			strncpy(file_tty, optarg, 20);
 			break;
 		case 'c':
-			//up_to_channel = atoi(optarg);
 			channels = get_channels_from_str(optarg);
 			break;
 		case 's':
