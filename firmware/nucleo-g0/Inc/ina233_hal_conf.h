@@ -23,7 +23,7 @@
  extern "C" {
 #endif
 
-#define CONF_NUM_DEVICES            4
+#define CONF_NUM_DEVICES            8
 #define CONF_I2C_BUS_TIMEOUT        10
 #define CONF_SHUNT_RESISTOR_VALUE   0.002  // Ohm
 #define CONF_MAX_EXPECTED_CURRENT   10.0   // A
